@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot Helper</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a1a; overflow: hidden; }
+.app-frame {
+  width: 390px;
+  height: 844px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+  background: #f5f0e8;
+}
+.header {
+  background: #4a7c6f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  z-index: 100;
+  position: relative;
+  min-height: 56px;
+}
+.header h1 {
+  color: white;
+  font-size: 16px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.header .subtitle {
+  color: #ccc;
+  font-size: 9px;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  margin-top: 2px;
+}
+.header .icon-left, .header .icon-right {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.header .icon-left { left: 12px; }
+.header .icon-right { right: 12px; }
+#map {
+  width: 100%;
+  height: calc(100% - 56px);
+  position: absolute;
+  top: 56px;
+  left: 0;
+}
+.fab {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #d4a843;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 200;
+  color: #333;
+  font-size: 28px;
+  font-weight: 300;
+}
+.btn-circle {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 200;
+  border: 1px solid #e5e5e5;
+}
+.btn-left { bottom: 24px; left: 16px; }
+.btn-right { bottom: 24px; right: 16px; }
+.btn-follow { top: 76px; right: 12px; }
+.marker-gold {
+  width: 32px;
+  height: 32px;
+}
+.controls {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.controls button {
+  padding: 8px 16px;
+  background: #4a7c6f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.controls button:hover { background: #3a6c5f; }
+
+.view-grid {
+  display: flex;
+  gap: 0;
+  width: 100vw;
+  height: 100vh;
+}
+.view-grid .app-frame {
+  flex: 1;
+  max-width: 50vw;
+  height: 100vh;
+  border-radius: 0;
+}
+.view-grid .app-frame #map,
+.view-grid .app-frame #map2 {
+  height: calc(100% - 56px);
+}
+</style>
+</head>
+<body>
+<div id="scene1" style="position:relative;">
+  <div class="app-frame" id="frame1">
+    <div class="header">
+      <div class="icon-left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+      <div style="text-align:center;">
+        <h1 style="display:flex;align-items:center;gap:6px;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4a843" stroke-width="2"><path d="M3 7V17L12 22L21 17V7L12 2L3 7Z"/><path d="M3 7L12 12"/><path d="M12 22V12"/><path d="M21 7L12 12"/></svg>
+          Die Goldsucher App
+        </h1>
+        <div class="subtitle">Tippe auf + oder die Karte um einen Ort hinzuzufügen</div>
+      </div>
+      <div class="icon-right">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+    </div>
+    <div id="map"></div>
+    <div class="btn-follow btn-circle">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M2 12h2m16 0h2M12 2v2m0 16v2"/><circle cx="12" cy="12" r="4"/></svg>
+    </div>
+    <div class="fab">+</div>
+    <div class="btn-circle btn-left">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    <div class="btn-circle btn-right">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const scene = params.get('scene') || '1';
+
+function createMarkerIcon(color, type) {
+  const inner = type === 'check' 
+    ? '<path d="M9 10l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    : type === 'x'
+    ? '<path d="M15 7L9 13M9 7l6 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<circle cx="12" cy="10" r="3" fill="rgba(0,0,0,0.15)"/>';
+  return L.divIcon({
+    className: 'custom-div-icon',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1.5" style="filter:drop-shadow(0px 2px 2px rgba(0,0,0,0.4));"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>${inner}</svg>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 36]
+  });
+}
+
+const sampleLocations = [
+  { lat: 51.05, lng: 13.74, color: '#EAB308', type: 'check', name: 'Elbe bei Dresden' },
+  { lat: 50.92, lng: 13.34, color: '#CA8A04', type: 'check', name: 'Freiberger Mulde' },
+  { lat: 50.78, lng: 12.08, color: '#FACC15', type: 'check', name: 'Weiße Elster' },
+  { lat: 48.25, lng: 11.78, color: '#EAB308', type: 'check', name: 'Isar München' },
+  { lat: 48.55, lng: 12.15, color: '#CA8A04', type: 'check', name: 'Isar Landshut' },
+  { lat: 47.72, lng: 11.10, color: '#FDE047', type: 'check', name: 'Loisach' },
+  { lat: 47.56, lng: 10.68, color: '#FACC15', type: 'check', name: 'Iller Oberstdorf' },
+  { lat: 49.45, lng: 11.08, color: '#3b82f6', type: 'dot', name: 'Pegnitz Nürnberg' },
+  { lat: 50.37, lng: 11.93, color: '#EAB308', type: 'check', name: 'Saale' },
+  { lat: 51.75, lng: 14.33, color: '#CA8A04', type: 'check', name: 'Spree' },
+  { lat: 48.08, lng: 11.57, color: '#EAB308', type: 'check', name: 'Isar-Biegung Süd' },
+  { lat: 50.08, lng: 12.68, color: '#ef4444', type: 'x', name: 'Eger (trocken)' },
+  { lat: 49.88, lng: 10.88, color: '#3b82f6', type: 'dot', name: 'Regnitz' },
+  { lat: 48.88, lng: 13.44, color: '#FACC15', type: 'check', name: 'Ilz Passau' },
+  { lat: 47.90, lng: 12.95, color: '#EAB308', type: 'check', name: 'Salzach' },
+  { lat: 51.33, lng: 12.37, color: '#3b82f6', type: 'dot', name: 'Weiße Elster Leipzig' },
+  { lat: 52.52, lng: 13.40, color: '#ef4444', type: 'x', name: 'Spree Berlin' },
+  { lat: 48.40, lng: 10.00, color: '#FACC15', type: 'check', name: 'Donau Ulm' },
+];
+
+if (scene === '1') {
+  // Satellite view with markers - zoomed to show Germany
+  const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.5, 11.5], 7);
+  L.tileLayer('https://mt1.google.com/vt/lyrs=y&hl=de&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(map);
+  sampleLocations.forEach(loc => {
+    L.marker([loc.lat, loc.lng], { icon: createMarkerIcon(loc.color, loc.type) }).addTo(map);
+  });
+} else if (scene === '2') {
+  // Terrain view with markers - closer zoom on Bavaria/Saxony
+  const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([49.5, 12.0], 8);
+  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 }).addTo(map);
+  sampleLocations.forEach(loc => {
+    L.marker([loc.lat, loc.lng], { icon: createMarkerIcon(loc.color, loc.type) }).addTo(map);
+  });
+} else if (scene === '3') {
+  // Satellite zoomed in on Isar area with Naturschutzgebiete
+  const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([48.2, 11.8], 10);
+  L.tileLayer('https://mt1.google.com/vt/lyrs=y&hl=de&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(map);
+  
+  // Load Naturschutzgebiete
+  fetch('/data/naturschutzgebiete.json')
+    .then(r => r.json())
+    .then(data => {
+      L.geoJSON(data, {
+        style: { fillColor: '#22c55e', fillOpacity: 0.25, color: '#16a34a', weight: 2, opacity: 0.7 }
+      }).addTo(map);
+    });
+
+  sampleLocations.filter(l => l.lat < 49 && l.lat > 47.5).forEach(loc => {
+    L.marker([loc.lat, loc.lng], { icon: createMarkerIcon(loc.color, loc.type) }).addTo(map);
+  });
+}
+</script>
+</body>
+</html>

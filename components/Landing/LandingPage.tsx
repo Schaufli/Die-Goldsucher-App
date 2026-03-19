@@ -55,13 +55,51 @@ export function LandingPage() {
       </nav>
 
       <section className="relative min-h-[90vh] flex items-center pt-20 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="/images/goldsucher-hero.png" 
-            alt="Flusslandschaft im deutschen Wald" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-stone-900/80 via-stone-900/50 to-transparent"></div>
+        <div className="absolute inset-0 z-0 bg-stone-900">
+          <div className="absolute inset-0 flex items-center justify-end overflow-hidden">
+            <div className="relative w-[55%] h-full hidden md:flex items-center justify-center gap-6 pr-12" style={{perspective: '1200px'}}>
+              <div className="absolute w-[280px] h-[560px] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/10" style={{transform: 'rotateY(-8deg) rotateX(3deg) translateZ(-30px)', right: '55%', top: '12%'}}>
+                <iframe
+                  src="/screenshot-helper.html?scene=2"
+                  className="w-[390px] h-[844px] border-0 pointer-events-none"
+                  style={{transform: 'scale(0.718)', transformOrigin: 'top left'}}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  title="Geländekarte"
+                />
+              </div>
+              <div className="absolute w-[300px] h-[600px] rounded-2xl overflow-hidden shadow-2xl border-2 border-amber-500/30 z-10" style={{transform: 'rotateY(-5deg) translateZ(20px)', right: '25%', top: '8%'}}>
+                <iframe
+                  src="/screenshot-helper.html?scene=1"
+                  className="w-[390px] h-[844px] border-0 pointer-events-none"
+                  style={{transform: 'scale(0.769)', transformOrigin: 'top left'}}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  title="Satellitenkarte mit Markern"
+                />
+              </div>
+              <div className="absolute w-[260px] h-[520px] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/10" style={{transform: 'rotateY(-3deg) rotateX(-2deg) translateZ(-10px)', right: '2%', top: '15%'}}>
+                <iframe
+                  src="/screenshot-helper.html?scene=3"
+                  className="w-[390px] h-[844px] border-0 pointer-events-none"
+                  style={{transform: 'scale(0.667)', transformOrigin: 'top left'}}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  title="Naturschutzgebiete"
+                />
+              </div>
+            </div>
+            <div className="md:hidden absolute inset-0 opacity-40">
+              <iframe
+                src="/screenshot-helper.html?scene=1"
+                className="w-full h-full border-0 pointer-events-none"
+                tabIndex={-1}
+                aria-hidden="true"
+                title="App Screenshot"
+              />
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-stone-900/95 via-stone-900/70 to-stone-900/20 md:to-transparent"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#FDFBF7] via-transparent to-transparent"></div>
         </div>
 
