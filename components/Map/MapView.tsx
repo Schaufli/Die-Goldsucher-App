@@ -221,7 +221,7 @@ export const MapView: React.FC<MapViewProps> = ({
           />
         </>
       ) : (
-        <TileLayerAny attribution='&copy; Google Maps' url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" maxZoom={20} />
+        <TileLayerAny attribution='&copy; Google Maps' url="https://mt1.google.com/vt/lyrs=y&hl=de&x={x}&y={y}&z={z}" maxZoom={20} />
       )}
       
       {showNaturschutzgebiete && naturschutzgebieteData && (
