@@ -113,9 +113,9 @@ function onEachNaturschutzFeature(feature: any, layer: any) {
   if (feature.properties?.name) {
     layer.bindPopup(
       `<div style="padding:4px 2px;">
-        <div style="font-size:14px;font-weight:bold;color:#166534;margin-bottom:6px;">🌿 ${feature.properties.name}</div>
-        ${feature.properties.flaeche ? `<div style="font-size:12px;color:#444;margin-bottom:4px;">Fläche: ${feature.properties.flaeche} ha</div>` : ''}
-        ${feature.properties.jahr ? `<div style="font-size:12px;color:#444;margin-bottom:6px;">Schutz seit: ${feature.properties.jahr}</div>` : ''}
+        <div style="font-size:14px;font-weight:bold;color:#1a1a1a;margin-bottom:6px;">🌿 ${feature.properties.name}</div>
+        ${feature.properties.flaeche ? `<div style="font-size:12px;color:#1a1a1a;margin-bottom:4px;">Fläche: ${feature.properties.flaeche} ha</div>` : ''}
+        ${feature.properties.jahr ? `<div style="font-size:12px;color:#1a1a1a;margin-bottom:6px;">Schutz seit: ${feature.properties.jahr}</div>` : ''}
         <div style="font-size:12px;font-weight:bold;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:4px 8px;text-align:center;">⛔ Goldwaschen verboten!</div>
       </div>`,
       { maxWidth: 260 }
