@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { X, User, Globe, Download, Upload, HelpCircle, MessageSquare, ShoppingBag, Scale, Settings, ArrowLeft, Send, ChevronDown, History, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, User, Globe, HelpCircle, MessageSquare, ShoppingBag, Scale, Settings, ArrowLeft, Send, ChevronDown, History, CheckCircle, GraduationCap } from 'lucide-react';
 import { PRIVACY_POLICY, IMPRINT, TERMS } from '../../constants/legalTexts';
 import { LocationService } from '../../services/locationService';
 import { HelpCenter } from '../Help/HelpCenter';
+import { TutorialView } from '../Tutorial/TutorialView';
 
 interface SettingsDrawerProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface SettingsDrawerProps {
 }
 
 export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose, onOpenProfile }) => {
-  const [activeView, setActiveView] = useState<'MAIN' | 'SUPPORT' | 'PRIVACY' | 'IMPRINT' | 'TERMS' | 'HELP'>('MAIN');
+  const [activeView, setActiveView] = useState<'MAIN' | 'SUPPORT' | 'PRIVACY' | 'IMPRINT' | 'TERMS' | 'HELP' | 'TUTORIAL'>('MAIN');
   const [supportSubject, setSupportSubject] = useState('');
   const [supportMessage, setSupportMessage] = useState('');
   const [supportEmail, setSupportEmail] = useState('');
@@ -19,12 +20,10 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose,
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const menuItems = [
     { icon: User, label: 'Profil', id: 'profile' },
-    { icon: Download, label: 'Export', id: 'export' },
-    { icon: Upload, label: 'Import', id: 'import' },
+    { icon: GraduationCap, label: 'Tutorial', id: 'tutorial' },
     { icon: HelpCircle, label: 'Goldsucher-Wissen', id: 'help' },
     { icon: MessageSquare, label: 'Support kontaktieren', id: 'support' },
     { icon: ShoppingBag, label: 'Ausrüstung kaufen', id: 'shop' },
@@ -40,37 +39,6 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose,
     },
   ];
 
-  const handleExport = async () => {
-    try {
-        await LocationService.exportData();
-    } catch (error) {
-        console.error(error);
-        alert('Export fehlgeschlagen. Bitte versuche es erneut.');
-    }
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (confirm('Möchtest du wirklich Daten importieren? Vorhandene Orte werden aktualisiert oder hinzugefügt.')) {
-        try {
-            await LocationService.importData(file);
-            alert('Daten erfolgreich importiert! Die App wird neu geladen.');
-            window.location.reload();
-        } catch (error) {
-            console.error(error);
-            alert('Import fehlgeschlagen: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler'));
-        }
-    }
-    
-    // Reset input
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
 
   const handleItemClick = (item: typeof menuItems[0]) => {
     if ('subItems' in item && item.subItems) {
@@ -82,12 +50,10 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose,
         window.open('https://goldsax-goldwaschen.de', '_blank');
     } else if (item.id === 'support') {
         setActiveView('SUPPORT');
+    } else if (item.id === 'tutorial') {
+        setActiveView('TUTORIAL');
     } else if (item.id === 'help') {
         setActiveView('HELP');
-    } else if (item.id === 'export') {
-        handleExport();
-    } else if (item.id === 'import') {
-        handleImportClick();
     } else if (item.id === 'profile') {
         onOpenProfile();
         onClose();
@@ -166,6 +132,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose,
           case 'IMPRINT': return 'Impressum';
           case 'TERMS': return 'AGB';
           case 'HELP': return 'Goldsucher-Wissen';
+          case 'TUTORIAL': return 'Tutorial';
           default: return 'Einstellungen';
       }
   };
@@ -180,13 +147,6 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose,
         onClick={onClose}
       />
 
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        className="hidden" 
-        accept=".json" 
-        onChange={handleFileChange} 
-      />
 
       {/* Drawer Panel - Slides from Left */}
       <div 
@@ -212,7 +172,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose,
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className={`flex-1 p-4 ${activeView === 'TUTORIAL' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
           {activeView === 'MAIN' && (
               <div className="flex flex-col gap-2">
                 {menuItems.map((item) => (
@@ -365,12 +325,19 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose,
                   <HelpCenter />
               </div>
           )}
+
+          {activeView === 'TUTORIAL' && (
+              <div className="animate-fade-in h-full -m-4 p-4 flex flex-col">
+                  <TutorialView onClose={() => setActiveView('MAIN')} />
+              </div>
+          )}
         </div>
         
-        {/* Version Info Footer */}
+        {activeView !== 'TUTORIAL' && (
         <div className="p-4 text-center text-xs text-gray-400 border-t border-gray-200">
             Version 1.0.0
         </div>
+        )}
       </div>
     </>
   );
