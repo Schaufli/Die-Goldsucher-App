@@ -15,12 +15,15 @@ A gold prospecting map app that lets users mark, classify, and track potential g
 ## Architecture
 
 - `App.tsx` — root component, manages all state and UI orchestration
-- `components/` — feature components (Map, AddLocation, LocationDetail, LocationList, Settings, Todo, UI)
+- `index.tsx` — entry point with path-based routing (`/` = app, `/landing` = landing page)
+- `components/` — feature components (Map, AddLocation, LocationDetail, LocationList, Settings, Todo, UI, Landing)
+- `components/Landing/LandingPage.tsx` — standalone marketing landing page (Adventure/nature theme)
 - `services/` — Firebase, auth, billing, and location persistence logic
 - `hooks/` — `useGeoLocation` for GPS tracking
 - `types.ts` — shared TypeScript types
 - `constants.ts` — colors, default coordinates
-- `server.ts` — Express server with Vite middleware
+- `server.ts` — Express server with Vite middleware, serves static files from `public/`
+- `public/images/` — static image assets (hero, map, journal images for landing page)
 
 ## Running the App
 
