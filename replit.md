@@ -38,6 +38,7 @@ The workflow is configured as "Start application" with `PORT=5000 npm run dev` o
 - Offline-first with IndexedDB, syncs to Firebase when online/authenticated
 - Location classification: Goldhöffig, Interessant, Nicht goldhöffig + custom layers
 - Map types: Satellite, Terrain, Hillshade/Standard
+- Naturschutzgebiete (nature reserves) overlay: GeoJSON layer with 8780 German nature reserves, toggleable via map menu, offline-cached in IndexedDB
 - Photo attachments (stored as Base64 locally, uploaded to Firebase Storage)
 - 14-day trial system via Firebase user profile creation date
 

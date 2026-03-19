@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
+import React, { useEffect, useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { LocateFixed, Locate } from 'lucide-react';
 import { GeoCoordinates, GoldLocation, Classification, PresetLayers } from '../../types';
@@ -95,6 +95,32 @@ interface MapViewProps {
   flyToCoordinates?: GeoCoordinates | null;
   isFollowingUser: boolean;
   setIsFollowingUser: (val: boolean) => void;
+  naturschutzgebieteData?: any;
+  showNaturschutzgebiete: boolean;
+}
+
+const GeoJSONAny = GeoJSON as any;
+
+const naturschutzStyle = {
+  fillColor: '#22c55e',
+  fillOpacity: 0.25,
+  color: '#16a34a',
+  weight: 2,
+  opacity: 0.7,
+};
+
+function onEachNaturschutzFeature(feature: any, layer: any) {
+  if (feature.properties?.name) {
+    layer.bindPopup(
+      `<div style="font-size:13px;font-weight:bold;color:#166534;">🌿 ${feature.properties.name}</div>
+       <div style="font-size:11px;color:#666;margin-top:4px;">
+         ${feature.properties.bl ? `Bundesland: ${feature.properties.bl}` : ''}
+         ${feature.properties.flaeche ? `<br/>Fläche: ${feature.properties.flaeche} ha` : ''}
+         ${feature.properties.jahr ? `<br/>Schutz seit: ${feature.properties.jahr}` : ''}
+       </div>`,
+      { maxWidth: 250 }
+    );
+  }
 }
 
 const RecenterMap = ({ coords, isFollowing }: { coords: GeoCoordinates, isFollowing: boolean }) => {
@@ -151,7 +177,7 @@ const MarkerAny = Marker as any;
 const PopupAny = Popup as any;
 
 export const MapView: React.FC<MapViewProps> = ({ 
-    userLocation, locations, geoLoading, onLocationSelect, onMarkerClick, onMapInteraction, mapType, layerColors, flyToCoordinates, isFollowingUser, setIsFollowingUser
+    userLocation, locations, geoLoading, onLocationSelect, onMarkerClick, onMapInteraction, mapType, layerColors, flyToCoordinates, isFollowingUser, setIsFollowingUser, naturschutzgebieteData, showNaturschutzgebiete
 }) => {
   const center = userLocation || DEFAULT_COORDINATES;
   const initialZoom = userLocation ? 13 : 6;
@@ -198,6 +224,15 @@ export const MapView: React.FC<MapViewProps> = ({
         <TileLayerAny attribution='&copy; Google Maps' url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" maxZoom={20} />
       )}
       
+      {showNaturschutzgebiete && naturschutzgebieteData && (
+        <GeoJSONAny
+          key="naturschutzgebiete"
+          data={naturschutzgebieteData}
+          style={naturschutzStyle}
+          onEachFeature={onEachNaturschutzFeature}
+        />
+      )}
+
       <LocationSelector 
         onSelect={onLocationSelect} 
         onInteraction={() => {

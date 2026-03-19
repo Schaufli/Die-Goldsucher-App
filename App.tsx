@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Map, Plus, Layers, Globe, ClipboardList, X, CheckCircle, NotebookTabs, Settings, User as UserIcon, Mountain, History, LocateFixed, Locate, Menu } from 'lucide-react';
+import { Map, Plus, Layers, Globe, ClipboardList, X, CheckCircle, NotebookTabs, Settings, User as UserIcon, Mountain, History, LocateFixed, Locate, Menu, TreePine } from 'lucide-react';
+import { loadNaturschutzgebiete } from './services/naturschutzgebieteService';
 import { MapView } from './components/Map/MapView';
 import { LocationWizard } from './components/AddLocation/LocationWizard';
 import { Paywall } from './components/UI/Paywall';
@@ -87,6 +88,10 @@ export default function App() {
   const [isLeftMenuOpen, setIsLeftMenuOpen] = useState(false);
   const [isRightMenuOpen, setIsRightMenuOpen] = useState(false);
 
+  const [showNaturschutzgebiete, setShowNaturschutzgebiete] = useState(false);
+  const [naturschutzgebieteData, setNaturschutzgebieteData] = useState<any>(null);
+  const [naturschutzLoading, setNaturschutzLoading] = useState(false);
+
   // Helper for dynamic app title
   const getAppTitle = (currentUser: User | null) => {
       if (!currentUser || !currentUser.displayName) return "Die Goldsucher App";
@@ -123,6 +128,22 @@ export default function App() {
       });
       return () => unsubscribe();
   }, []);
+
+  const handleToggleNaturschutzgebiete = async () => {
+    const newVal = !showNaturschutzgebiete;
+    setShowNaturschutzgebiete(newVal);
+    if (newVal && !naturschutzgebieteData) {
+      setNaturschutzLoading(true);
+      try {
+        const data = await loadNaturschutzgebiete();
+        setNaturschutzgebieteData(data);
+      } catch (e) {
+        console.error('Failed to load Naturschutzgebiete', e);
+      } finally {
+        setNaturschutzLoading(false);
+      }
+    }
+  };
 
   // Load data on startup
   useEffect(() => {
@@ -323,6 +344,8 @@ export default function App() {
             flyToCoordinates={flyToCoordinates}
             isFollowingUser={isFollowingUser}
             setIsFollowingUser={setIsFollowingUser}
+            showNaturschutzgebiete={showNaturschutzgebiete}
+            naturschutzgebieteData={naturschutzgebieteData}
         />
         
         {/* Selection Mode Banner */}
@@ -496,6 +519,14 @@ export default function App() {
                         >
                             <Layers className="w-6 h-6" />
                             <span className="font-bold text-sm pr-2">Standard</span>
+                        </button>
+                        <div className="w-full h-px bg-gray-300 my-1"></div>
+                        <button
+                            onClick={() => { handleToggleNaturschutzgebiete(); setIsRightMenuOpen(false); }}
+                            className={`p-3 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 hover:bg-gray-50 active:scale-95 transition-all ${showNaturschutzgebiete ? 'bg-green-600 text-white' : 'bg-white text-brand-textSec'}`}
+                        >
+                            <TreePine className="w-6 h-6" />
+                            <span className="font-bold text-sm pr-2 whitespace-nowrap">{naturschutzLoading ? 'Laden...' : 'Naturschutz'}</span>
                         </button>
                     </div>
                 )}
