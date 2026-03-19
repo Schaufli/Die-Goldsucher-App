@@ -1,0 +1,8 @@
+{
+  "name": "Die Goldsucher App",
+  "description": "Eine Android-ähnliche Web-App zur Kartierung von Goldfunden mit geführtem Eingabeprozess und lokaler Datenspeicherung.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
