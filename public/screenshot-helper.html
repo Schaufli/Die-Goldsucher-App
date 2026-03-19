@@ -241,6 +241,157 @@ if (scene === '1') {
   sampleLocations.filter(l => l.lat < 49 && l.lat > 47.5).forEach(loc => {
     L.marker([loc.lat, loc.lng], { icon: createMarkerIcon(loc.color, loc.type) }).addTo(map);
   });
+} else if (scene === '4') {
+  // Detail drawer scene - location detail with photo
+  document.getElementById('frame1').innerHTML = `
+    <div class="header">
+      <div class="icon-left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+      <div style="text-align:center;">
+        <h1 style="display:flex;align-items:center;gap:6px;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4a843" stroke-width="2"><path d="M3 7V17L12 22L21 17V7L12 2L3 7Z"/><path d="M3 7L12 12"/><path d="M12 22V12"/><path d="M21 7L12 12"/></svg>
+          Die Goldsucher App
+        </h1>
+        <div class="subtitle">Tippe auf + oder die Karte um einen Ort hinzuzufügen</div>
+      </div>
+      <div class="icon-right">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+    </div>
+    <div id="map" style="height:40%;position:absolute;top:56px;left:0;width:100%;"></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:60%;background:#f5f0e8;border-radius:24px 24px 0 0;box-shadow:0 -5px 20px rgba(0,0,0,0.2);z-index:200;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="width:100%;display:flex;justify-content:center;padding:12px 0 4px;">
+        <div style="width:48px;height:6px;background:#ccc;border-radius:3px;"></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 20px 20px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div>
+            <h2 style="font-size:22px;font-weight:800;color:#2d3748;margin:0 0 8px;">Freiberger Mulde</h2>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="background:#CA8A04;color:white;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Goldhöffig</span>
+              <span style="background:#3b82f6;color:white;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Raum Freiberg</span>
+              <div style="display:flex;color:#d4a843;font-size:14px;margin-left:4px;">★★★★<span style="color:#ccc;">★</span></div>
+            </div>
+            <div style="margin-top:12px;">
+              <button style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:#eee;border-radius:12px;border:1px solid #ddd;font-size:13px;font-weight:700;color:#2d3748;cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4a843" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                Koordinaten kopieren
+              </button>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <div style="width:36px;height:36px;background:#f0f0f0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div style="width:36px;height:36px;background:#f0f0f0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px;background:#eee;border-radius:8px;border-left:4px solid #4a7c6f;margin-bottom:16px;">
+          <p style="font-size:13px;color:#555;font-style:italic;margin:0;line-height:1.6;">Sehr guter Spot direkt nach der Flussbiegung. Feiner Blacksand zwischen den Felsen. Wasserstand war niedrig, ideal zum Waschen. 3 kleine Flitter in 2 Stunden gefunden. Nächstes Mal größere Pfanne und Sluice-Box mitbringen!</p>
+        </div>
+        <h3 style="font-weight:700;color:#2d3748;margin-bottom:10px;font-size:14px;display:flex;justify-content:space-between;">
+          Fotos
+          <span style="font-weight:400;color:#aaa;font-size:12px;">3 Bilder</span>
+        </h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <div style="aspect-ratio:1;background:#ddd;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #aaa;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span style="font-size:9px;font-weight:700;color:#666;margin-top:4px;text-align:center;line-height:1.2;">Foto<br>machen</span>
+          </div>
+          <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid #ddd;">
+            <img src="/images/bach-goldwaschen.png" style="width:100%;height:100%;object-fit:cover;" alt="Bach">
+          </div>
+          <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid #ddd;">
+            <img src="/images/goldpfanne.png" style="width:100%;height:100%;object-fit:cover;" alt="Goldpfanne">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  const mapEl = document.getElementById('map');
+  if (mapEl) {
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.92, 13.34], 13);
+    L.tileLayer('https://mt1.google.com/vt/lyrs=y&hl=de&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(map);
+    L.marker([50.92, 13.34], { icon: createMarkerIcon('#CA8A04', 'check') }).addTo(map);
+  }
+
+} else if (scene === '5') {
+  // Location list sorted by gold rating
+  document.getElementById('frame1').innerHTML = `
+    <div style="height:100%;display:flex;flex-direction:column;background:#f5f0e8;">
+      <div style="height:56px;background:white;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-weight:800;font-size:18px;color:#4a7c6f;">Meine Fundorte</span>
+          <span style="font-size:12px;color:#aaa;background:#f0f0f0;padding:2px 8px;border-radius:12px;">8</span>
+        </div>
+        <div style="width:36px;height:36px;background:#f5f5f5;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+      </div>
+      <div style="padding:12px 16px;background:white;border-bottom:1px solid #e5e5e5;display:flex;flex-direction:column;gap:10px;">
+        <div style="position:relative;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Suchen..." style="width:100%;padding:8px 12px 8px 36px;background:#f9f9f9;border:1px solid #e5e5e5;border-radius:8px;font-size:13px;outline:none;">
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="flex:1;padding:10px 14px;background:#f9f9f9;border:1px solid #e5e5e5;border-radius:12px;font-size:13px;font-weight:700;color:#2d3748;display:flex;justify-content:space-between;align-items:center;">
+            Gold-Rating
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div style="padding:10px;background:#f9f9f9;border:1px solid #e5e5e5;border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2d3748" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">
+          <button style="padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid #e5e5e5;background:white;color:#666;cursor:pointer;">Alle</button>
+          <button style="padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid #4a7c6f;background:#4a7c6f;color:white;cursor:pointer;">Goldhöffig</button>
+          <button style="padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid #e5e5e5;background:white;color:#666;cursor:pointer;display:flex;align-items:center;gap:4px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:#3b82f6;"></div>
+            Interessant
+          </button>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:12px 16px;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${[
+            { name: 'Salzach Laufen', date: '12.03.2026', rating: 5, img: '/images/bach-goldwaschen.png' },
+            { name: 'Freiberger Mulde', date: '28.02.2026', rating: 4, img: '/images/goldpfanne.png' },
+            { name: 'Isar-Biegung Süd', date: '15.02.2026', rating: 4, img: '/images/bach-goldwaschen.png' },
+            { name: 'Schwarza Thüringen', date: '01.02.2026', rating: 3, img: '' },
+            { name: 'Eder bei Frankenberg', date: '18.01.2026', rating: 3, img: '' },
+            { name: 'Ilz bei Passau', date: '05.01.2026', rating: 2, img: '/images/goldpfanne.png' },
+            { name: 'Donau bei Ulm', date: '20.12.2025', rating: 2, img: '' },
+            { name: 'Weiße Elster', date: '10.12.2025', rating: 1, img: '' },
+          ].map(loc => `
+            <div style="background:white;padding:14px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border:1px solid transparent;display:flex;gap:14px;cursor:pointer;">
+              ${loc.img ? `<div style="width:72px;height:72px;flex-shrink:0;border-radius:8px;overflow:hidden;border:1px solid #e5e5e5;"><img src="${loc.img}" style="width:100%;height:100%;object-fit:cover;" alt="${loc.name}"></div>` : ''}
+              <div style="flex:1;display:flex;flex-direction:column;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+                  <div>
+                    <h3 style="font-weight:700;color:#2d3748;font-size:16px;margin:0 0 4px;line-height:1.2;">${loc.name}</h3>
+                    <span style="font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px;">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      ${loc.date}
+                    </span>
+                  </div>
+                  <span style="background:#CA8A04;color:white;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Goldhöffig</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
+                  <div style="display:flex;color:#d4a843;font-size:12px;">${'★'.repeat(loc.rating)}${'<span style="color:#ddd;">★</span>'.repeat(5-loc.rating)}</div>
+                  <div style="width:30px;height:30px;background:#f5f5f5;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
 }
 </script>
 </body>

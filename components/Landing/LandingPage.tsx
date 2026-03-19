@@ -145,28 +145,26 @@ export function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-24">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-amber-500/20 rounded-2xl rotate-3 scale-105 transition-transform group-hover:rotate-6"></div>
-              <img 
-                src="/images/goldsucher-map.png" 
-                alt="Kartenansicht mit Fundorten" 
-                className="relative rounded-2xl shadow-2xl object-cover w-full aspect-[4/3] grayscale-[20%] sepia-[10%] group-hover:grayscale-0 transition-all duration-500"
-              />
-              <div className="absolute -bottom-6 -right-6 bg-white p-4 rounded-xl shadow-xl border border-stone-200 w-64 transform transition-transform group-hover:-translate-y-2">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-amber-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-stone-900 text-sm">Isar-Biegung Nord</h4>
-                    <p className="text-xs text-stone-500">Goldhöffig</p>
-                  </div>
-                </div>
-                <div className="flex gap-1 mb-2">
-                  {[1, 2, 3, 4].map(i => <Star key={i} className="w-3 h-3 text-amber-500 fill-amber-500" />)}
-                  <Star className="w-3 h-3 text-stone-300 fill-stone-300" />
-                </div>
-                <p className="text-xs text-stone-600">Gute Fließgeschwindigkeit. Erstes Waschgold gefunden!</p>
+            <div className="relative group flex justify-center gap-4" style={{perspective: '800px'}}>
+              <div className="w-[220px] h-[440px] rounded-2xl overflow-hidden shadow-2xl border-2 border-stone-200 flex-shrink-0 transition-transform duration-500 group-hover:scale-[1.02]" style={{transform: 'rotateY(5deg)'}}>
+                <iframe
+                  src="/screenshot-helper.html?scene=4"
+                  className="border-0 pointer-events-none"
+                  style={{width: '390px', height: '844px', transform: 'scale(0.564)', transformOrigin: 'top left'}}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  title="Detailansicht mit Notizen und Fotos"
+                />
+              </div>
+              <div className="w-[220px] h-[440px] rounded-2xl overflow-hidden shadow-2xl border-2 border-amber-500/40 flex-shrink-0 transition-transform duration-500 group-hover:scale-[1.02] mt-8" style={{transform: 'rotateY(-3deg)'}}>
+                <iframe
+                  src="/screenshot-helper.html?scene=5"
+                  className="border-0 pointer-events-none"
+                  style={{width: '390px', height: '844px', transform: 'scale(0.564)', transformOrigin: 'top left'}}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  title="Ortsliste sortiert nach Gold-Rating"
+                />
               </div>
             </div>
 
