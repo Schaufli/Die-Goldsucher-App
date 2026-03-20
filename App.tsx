@@ -337,24 +337,39 @@ export default function App() {
       )}
 
       {showFirstTimeTutorial && (
-        <div className="fixed inset-0 z-[2000] flex flex-col bg-brand-bg animate-fade-in">
-          {/* Header */}
-          <div className="h-16 bg-brand-accent flex items-center justify-between px-4 shrink-0 shadow-md">
-            <div className="flex items-center gap-2 text-white font-bold text-lg">
-              <Map className="w-6 h-6 text-brand-gold" />
-              <span>Tutorial</span>
+        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-end">
+          {/* Frosted glass backdrop – tap to skip */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={handleFirstTimeTutorialClose}
+          />
+          {/* Tutorial card – not full-screen, map visible above */}
+          <div
+            className="relative w-full max-w-md rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-slide-up"
+            style={{ maxHeight: '88vh', background: 'var(--color-brand-bg, #f5f0e8)' }}
+          >
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-12 h-1.5 rounded-full bg-gray-300" />
             </div>
-            <button
-              onClick={handleFirstTimeTutorialClose}
-              className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"
-              aria-label="Tutorial überspringen"
-            >
-              <X size={24} />
-            </button>
-          </div>
-          {/* Tutorial content */}
-          <div className="flex-1 overflow-hidden flex flex-col p-4">
-            <TutorialView onClose={handleFirstTimeTutorialClose} />
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3 shrink-0">
+              <div className="flex items-center gap-2 font-bold text-lg text-brand-text">
+                <Map className="w-5 h-5 text-brand-gold" />
+                <span>Tutorial</span>
+              </div>
+              <button
+                onClick={handleFirstTimeTutorialClose}
+                className="text-brand-textSec p-2 hover:bg-black/5 rounded-full transition-colors"
+                aria-label="Tutorial überspringen"
+              >
+                <X size={22} />
+              </button>
+            </div>
+            {/* Tutorial content */}
+            <div className="flex-1 overflow-hidden flex flex-col px-4 pb-4 min-h-0">
+              <TutorialView onClose={handleFirstTimeTutorialClose} />
+            </div>
           </div>
         </div>
       )}
