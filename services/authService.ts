@@ -27,13 +27,29 @@ export interface UserProfile {
 export const AuthService = {
     loginWithGoogle: async (displayName?: string) => {
         const provider = new GoogleAuthProvider();
-        // Store optional display name to apply after redirect returns
-        if (displayName) {
-            localStorage.setItem('goldsucher_pending_name', displayName);
+        try {
+            const result = await signInWithPopup(auth, provider);
+            if (result.user) {
+                if (displayName) {
+                    await updateProfile(result.user, { displayName });
+                }
+                await AuthService.syncUserToFirestore(result.user, displayName || undefined);
+            }
+            return result;
+        } catch (popupError: any) {
+            if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/cancelled-popup-request') {
+                if (displayName) {
+                    localStorage.setItem('goldsucher_pending_name', displayName);
+                }
+                await signInWithRedirect(auth, provider);
+                return null;
+            }
+            if (popupError.code === 'auth/unauthorized-domain') {
+                const currentDomain = window.location.hostname;
+                popupError.message = `Domain "${currentDomain}" ist nicht autorisiert. Bitte füge genau diese Domain in Firebase Console → Authentication → Authorized domains hinzu.`;
+            }
+            throw popupError;
         }
-        // Use redirect flow — more reliable on mobile web apps (no popup)
-        await signInWithRedirect(auth, provider);
-        // Page navigates to Google and returns; result is handled in handleRedirectResult
     },
 
     handleRedirectResult: async () => {

@@ -83,15 +83,16 @@ export const AuthDrawer: React.FC<AuthDrawerProps> = ({ isOpen, onClose, user })
     setLoading(true);
     setError(null);
     try {
-      // Redirects to Google — page will navigate away, no onClose needed
-      await AuthService.loginWithGoogle();
+      const result = await AuthService.loginWithGoogle();
+      if (result) onClose();
     } catch (err: any) {
       console.error("Google Login Error:", err);
       if (err.code === 'auth/operation-not-allowed') {
           setError("Google Login ist in Firebase nicht aktiviert. Bitte aktiviere 'Google' unter 'Authentication' -> 'Sign-in method'.");
       } else {
-          setError(`Google Anmeldung fehlgeschlagen: ${err.message || "Unbekannter Fehler"}`);
+          setError(err.message || "Google Anmeldung fehlgeschlagen");
       }
+    } finally {
       setLoading(false);
     }
   };
@@ -104,15 +105,16 @@ export const AuthDrawer: React.FC<AuthDrawerProps> = ({ isOpen, onClose, user })
     setLoading(true);
     setError(null);
     try {
-      // Pass name so it's applied after the redirect returns
-      await AuthService.loginWithGoogle(firstName.trim());
+      const result = await AuthService.loginWithGoogle(firstName.trim());
+      if (result) onClose();
     } catch (err: any) {
       console.error("Google Register Error:", err);
       if (err.code === 'auth/operation-not-allowed') {
           setError("Google Login ist in Firebase nicht aktiviert. Bitte aktiviere 'Google' unter 'Authentication' -> 'Sign-in method'.");
       } else {
-          setError(`Google Registrierung fehlgeschlagen: ${err.message || "Unbekannter Fehler"}`);
+          setError(err.message || "Google Registrierung fehlgeschlagen");
       }
+    } finally {
       setLoading(false);
     }
   };
