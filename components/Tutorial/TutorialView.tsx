@@ -22,7 +22,7 @@ const HighlightCircle = ({ className, delay = 0.8, size = 10 }: { className: str
 const IllustrationCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <motion.div
     className={`relative w-full rounded-2xl overflow-hidden bg-[#f0ece4] shadow-lg border border-gray-200 ${className}`}
-    style={{ minHeight: '160px', maxHeight: '220px' }}
+    style={{ height: '300px' }}
     initial={{ scale: 0.95, opacity: 0 }}
     animate={{ scale: 1, opacity: 1 }}
     transition={{ delay: 0.15, duration: 0.4 }}
@@ -43,15 +43,46 @@ const MiniHeader = () => (
 );
 
 const MapLines = () => (
-  <svg width="100%" height="100%" viewBox="0 0 300 200" className="absolute inset-0 opacity-30">
-    <path d="M0 60 Q80 40 160 55 Q240 70 300 50" stroke="#a8c4a0" strokeWidth="2" fill="none" />
-    <path d="M0 100 Q100 80 200 95 Q280 110 300 90" stroke="#7eb0d4" strokeWidth="3" fill="none" />
-    <path d="M0 140 Q60 135 120 125 Q180 115 240 130 Q300 145 300 135" stroke="#7eb0d4" strokeWidth="2" fill="none" />
-    <path d="M60 0 L60 200" stroke="#d4d0c8" strokeWidth="0.5" />
-    <path d="M150 0 L150 200" stroke="#d4d0c8" strokeWidth="0.5" />
-    <path d="M240 0 L240 200" stroke="#d4d0c8" strokeWidth="0.5" />
-    <path d="M0 70 L300 70" stroke="#d4d0c8" strokeWidth="0.5" />
-    <path d="M0 130 L300 130" stroke="#d4d0c8" strokeWidth="0.5" />
+  <svg width="100%" height="100%" viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice" className="absolute inset-0">
+    {/* Base land fill */}
+    <rect width="300" height="260" fill="#f2ede6" />
+    {/* Forest/green areas */}
+    <ellipse cx="40" cy="60" rx="38" ry="28" fill="#c8dbb8" opacity="0.7" />
+    <ellipse cx="250" cy="80" rx="32" ry="22" fill="#c8dbb8" opacity="0.6" />
+    <ellipse cx="180" cy="200" rx="50" ry="30" fill="#c8dbb8" opacity="0.55" />
+    <ellipse cx="60" cy="220" rx="30" ry="18" fill="#c8dbb8" opacity="0.5" />
+    {/* Fields / open land patches */}
+    <rect x="90" y="140" width="70" height="45" rx="4" fill="#e8dfc8" opacity="0.8" />
+    <rect x="200" y="150" width="55" height="40" rx="4" fill="#eae2cc" opacity="0.7" />
+    {/* River */}
+    <path d="M0 115 Q40 108 80 118 Q120 128 160 120 Q200 112 240 122 Q270 130 300 118" stroke="#a8c8e0" strokeWidth="7" fill="none" strokeLinecap="round" />
+    <path d="M0 115 Q40 108 80 118 Q120 128 160 120 Q200 112 240 122 Q270 130 300 118" stroke="#b8d8ee" strokeWidth="5" fill="none" strokeLinecap="round" />
+    {/* Small stream */}
+    <path d="M155 0 Q150 30 158 60 Q165 90 160 120" stroke="#b8d8ee" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+    {/* Main road (yellow, like Bundesstraße) */}
+    <path d="M0 80 Q60 75 110 88 Q160 100 210 90 Q260 80 300 85" stroke="#e8c84a" strokeWidth="5" fill="none" strokeLinecap="round" />
+    <path d="M0 80 Q60 75 110 88 Q160 100 210 90 Q260 80 300 85" stroke="#f5d96a" strokeWidth="3" fill="none" strokeLinecap="round" />
+    {/* Secondary road */}
+    <path d="M100 0 Q105 50 108 88 Q110 130 115 180 Q120 220 118 260" stroke="#ffffff" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+    <path d="M100 0 Q105 50 108 88 Q110 130 115 180 Q120 220 118 260" stroke="#d8d0c0" strokeWidth="2" fill="none" strokeLinecap="round" />
+    {/* Minor roads */}
+    <path d="M0 160 Q50 155 108 160 Q160 165 200 158 Q250 150 300 155" stroke="#ffffff" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+    <path d="M0 160 Q50 155 108 160 Q160 165 200 158 Q250 150 300 155" stroke="#d8d0c0" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+    <path d="M200 0 Q205 40 210 90 Q215 130 212 180 Q210 220 215 260" stroke="#ffffff" strokeWidth="2" fill="none" strokeLinecap="round" />
+    <path d="M200 0 Q205 40 210 90 Q215 130 212 180 Q210 220 215 260" stroke="#d8d0c0" strokeWidth="1" fill="none" strokeLinecap="round" />
+    {/* Settlement area */}
+    <rect x="118" y="55" width="38" height="28" rx="3" fill="#e8e0d4" opacity="0.9" />
+    <rect x="122" y="59" width="8" height="6" rx="1" fill="#c8c0b4" opacity="0.8" />
+    <rect x="132" y="59" width="8" height="6" rx="1" fill="#c8c0b4" opacity="0.8" />
+    <rect x="142" y="59" width="8" height="6" rx="1" fill="#c8c0b4" opacity="0.8" />
+    <rect x="122" y="68" width="8" height="6" rx="1" fill="#c8c0b4" opacity="0.8" />
+    <rect x="132" y="68" width="8" height="6" rx="1" fill="#c8c0b4" opacity="0.8" />
+    <rect x="142" y="68" width="8" height="6" rx="1" fill="#c8c0b4" opacity="0.8" />
+    {/* Contour lines (subtle terrain) */}
+    <path d="M0 40 Q60 32 120 38 Q180 44 240 36 Q280 30 300 35" stroke="#d8cfc0" strokeWidth="0.8" fill="none" opacity="0.6" />
+    <path d="M0 50 Q60 43 120 48 Q180 53 240 46 Q280 40 300 45" stroke="#d8cfc0" strokeWidth="0.8" fill="none" opacity="0.6" />
+    <path d="M0 190 Q80 185 150 192 Q220 199 300 190" stroke="#d8cfc0" strokeWidth="0.8" fill="none" opacity="0.6" />
+    <path d="M0 200 Q80 195 150 202 Q220 209 300 200" stroke="#d8cfc0" strokeWidth="0.8" fill="none" opacity="0.6" />
   </svg>
 );
 
@@ -87,7 +118,7 @@ const GPSBtn = () => (
 const WelcomeIllustration = () => (
   <IllustrationCard>
     <MiniHeader />
-    <div className="relative flex-1" style={{ height: '160px' }}>
+    <div className="relative flex-1" style={{ height: '260px' }}>
       <MapLines />
       <GPSBtn />
       <MarkerPin color="#EAB308" x="20%" y="20%" label="Isar-Nord" />
@@ -121,7 +152,7 @@ const WelcomeIllustration = () => (
 const MapNavIllustration = () => (
   <IllustrationCard>
     <MiniHeader />
-    <div className="relative flex-1" style={{ height: '160px' }}>
+    <div className="relative flex-1" style={{ height: '260px' }}>
       <MapLines />
       <GPSBtn />
       <MarkerPin color="#EAB308" x="25%" y="30%" />
@@ -163,7 +194,7 @@ const MapNavIllustration = () => (
 const AddLocationIllustration = () => (
   <IllustrationCard>
     <MiniHeader />
-    <div className="relative flex-1" style={{ height: '160px' }}>
+    <div className="relative flex-1" style={{ height: '260px' }}>
       <MapLines />
       <GPSBtn />
       <MarkerPin color="#EAB308" x="35%" y="30%" />
@@ -244,7 +275,7 @@ const WizardIllustration = () => (
 const LeftMenuOpenIllustration = () => (
   <IllustrationCard>
     <MiniHeader />
-    <div className="relative flex-1" style={{ height: '160px' }}>
+    <div className="relative flex-1" style={{ height: '260px' }}>
       <MapLines />
       <GPSBtn />
       <MarkerPin color="#EAB308" x="50%" y="25%" />
@@ -407,7 +438,7 @@ const SPARKLE_POSITIONS = [
 const FinishIllustration = () => (
   <IllustrationCard>
     <MiniHeader />
-    <div className="relative flex-1" style={{ height: '160px' }}>
+    <div className="relative flex-1" style={{ height: '260px' }}>
       <MapLines />
       <GPSBtn />
       <MarkerPin color="#EAB308" x="15%" y="15%" label="Fundort 1" />
@@ -545,12 +576,12 @@ export const TutorialView: React.FC<TutorialViewProps> = ({ onClose }) => {
             animate="center"
             exit="exit"
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="flex flex-col gap-3 p-1"
+            className="flex flex-col gap-5 px-1 pb-2"
           >
             {step.illustration}
-            <div>
-              <h2 className="text-lg font-bold text-brand-text mb-1">{step.title}</h2>
-              <p className="text-sm text-brand-textSec leading-relaxed">{step.description}</p>
+            <div className="px-1">
+              <h2 className="text-lg font-bold text-brand-text mb-3">{step.title}</h2>
+              <p className="text-sm text-brand-textSec leading-loose">{step.description}</p>
             </div>
           </motion.div>
         </AnimatePresence>
