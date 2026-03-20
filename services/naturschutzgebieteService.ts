@@ -63,3 +63,45 @@ export async function loadNaturschutzgebiete(): Promise<any> {
 
   return data;
 }
+
+const NP_CACHE_KEY = 'nationalparks';
+
+async function getNpCached(): Promise<any | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(NP_CACHE_KEY);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function setNpCached(data: any): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put(data, NP_CACHE_KEY);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+  }
+}
+
+export async function loadNationalparks(): Promise<any> {
+  const cached = await getNpCached();
+  if (cached) return cached;
+
+  const response = await fetch('/data/nationalparks.json');
+  if (!response.ok) throw new Error('Failed to load Nationalparks data');
+  const data = await response.json();
+  await setNpCached(data);
+  return data;
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Map, Plus, Layers, Globe, ClipboardList, X, CheckCircle, NotebookTabs, Settings, User as UserIcon, Mountain, History, LocateFixed, Locate, Menu, TreePine } from 'lucide-react';
-import { loadNaturschutzgebiete } from './services/naturschutzgebieteService';
+import { loadNaturschutzgebiete, loadNationalparks } from './services/naturschutzgebieteService';
 import { MapView } from './components/Map/MapView';
 import { NsgProximityInfo } from './components/Map/NsgProximityInfo';
 import { computeNsgProximity, NsgProximityResult } from './utils/nsgProximity';
@@ -110,6 +110,7 @@ export default function App() {
   const [showNaturschutzgebiete, setShowNaturschutzgebiete] = useState(false);
   const [naturschutzgebieteData, setNaturschutzgebieteData] = useState<any>(null);
   const [naturschutzLoading, setNaturschutzLoading] = useState(false);
+  const [nationalparksData, setNationalparksData] = useState<any>(null);
 
   const [nsgProximity, setNsgProximity] = useState<NsgProximityResult | null>(null);
   const [nsgLoading, setNsgLoading] = useState(false);
@@ -162,21 +163,37 @@ export default function App() {
     let cancelled = false;
 
     const compute = async () => {
-      let data = naturschutzgebieteData;
-      if (!data) {
+      let nsgData = naturschutzgebieteData;
+      let npData = nationalparksData;
+      if (!nsgData || !npData) {
         setNsgLoading(true);
-        try {
-          data = await loadNaturschutzgebiete();
-          if (!cancelled) setNaturschutzgebieteData(data);
-        } catch (e) {
-          console.error('Failed to load NSG data for proximity check', e);
+        const results = await Promise.allSettled([
+          nsgData ? Promise.resolve(nsgData) : loadNaturschutzgebiete(),
+          npData ? Promise.resolve(npData) : loadNationalparks(),
+        ]);
+        if (results[0].status === 'fulfilled') {
+          nsgData = results[0].value;
+          if (!cancelled && !naturschutzgebieteData) setNaturschutzgebieteData(nsgData);
+        }
+        if (results[1].status === 'fulfilled') {
+          npData = results[1].value;
+          if (!cancelled && !nationalparksData) setNationalparksData(npData);
+        }
+        if (!nsgData && !npData) {
           if (!cancelled) setNsgLoading(false);
           return;
         }
       }
       if (!cancelled) {
-        const result = computeNsgProximity(locationForNsg, data);
-        setNsgProximity(result);
+        const nsgResult = nsgData ? computeNsgProximity(locationForNsg, nsgData) : null;
+        const npResult = npData ? computeNsgProximity(locationForNsg, npData) : null;
+        let best = nsgResult || npResult;
+        if (nsgResult && npResult) {
+          best = nsgResult.insideNSG ? nsgResult
+            : npResult.insideNSG ? npResult
+            : nsgResult.distanceMeters <= npResult.distanceMeters ? nsgResult : npResult;
+        }
+        if (best) setNsgProximity(best);
         setNsgLoading(false);
       }
     };
@@ -184,21 +201,20 @@ export default function App() {
     compute();
 
     return () => { cancelled = true; };
-  }, [isFollowingUser, coordinates, naturschutzgebieteData]);
+  }, [isFollowingUser, coordinates, naturschutzgebieteData, nationalparksData]);
 
   const handleToggleNaturschutzgebiete = async () => {
     const newVal = !showNaturschutzgebiete;
     setShowNaturschutzgebiete(newVal);
-    if (newVal && !naturschutzgebieteData) {
+    if (newVal) {
       setNaturschutzLoading(true);
-      try {
-        const data = await loadNaturschutzgebiete();
-        setNaturschutzgebieteData(data);
-      } catch (e) {
-        console.error('Failed to load Naturschutzgebiete', e);
-      } finally {
-        setNaturschutzLoading(false);
-      }
+      const results = await Promise.allSettled([
+        naturschutzgebieteData ? Promise.resolve(naturschutzgebieteData) : loadNaturschutzgebiete(),
+        nationalparksData ? Promise.resolve(nationalparksData) : loadNationalparks(),
+      ]);
+      if (results[0].status === 'fulfilled' && !naturschutzgebieteData) setNaturschutzgebieteData(results[0].value);
+      if (results[1].status === 'fulfilled' && !nationalparksData) setNationalparksData(results[1].value);
+      setNaturschutzLoading(false);
     }
   };
 
@@ -448,6 +464,7 @@ export default function App() {
             setIsFollowingUser={setIsFollowingUser}
             showNaturschutzgebiete={showNaturschutzgebiete}
             naturschutzgebieteData={naturschutzgebieteData}
+            nationalparksData={nationalparksData}
         />
         
         {/* Selection Mode Banner */}

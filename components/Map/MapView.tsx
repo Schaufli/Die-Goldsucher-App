@@ -98,6 +98,7 @@ interface MapViewProps {
   isFollowingUser: boolean;
   setIsFollowingUser: (val: boolean) => void;
   naturschutzgebieteData?: any;
+  nationalparksData?: any;
   showNaturschutzgebiete: boolean;
 }
 
@@ -111,6 +112,14 @@ const naturschutzStyle = {
   opacity: 0.7,
 };
 
+const nationalparkStyle = {
+  fillColor: '#15803d',
+  fillOpacity: 0.35,
+  color: '#166534',
+  weight: 3,
+  opacity: 0.9,
+};
+
 function onEachNaturschutzFeature(feature: any, layer: any) {
   if (feature.properties?.name) {
     layer.bindPopup(
@@ -118,6 +127,18 @@ function onEachNaturschutzFeature(feature: any, layer: any) {
         <div style="font-size:14px;font-weight:bold;color:#1a1a1a;margin-bottom:6px;">🌿 ${feature.properties.name}</div>
         ${feature.properties.flaeche ? `<div style="font-size:12px;color:#1a1a1a;margin-bottom:4px;">Fläche: ${feature.properties.flaeche} ha</div>` : ''}
         ${feature.properties.jahr ? `<div style="font-size:12px;color:#1a1a1a;margin-bottom:6px;">Schutz seit: ${feature.properties.jahr}</div>` : ''}
+        <div style="font-size:12px;font-weight:bold;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:4px 8px;text-align:center;">⛔ Goldwaschen verboten!</div>
+      </div>`,
+      { maxWidth: 260 }
+    );
+  }
+}
+
+function onEachNationalparkFeature(feature: any, layer: any) {
+  if (feature.properties?.name) {
+    layer.bindPopup(
+      `<div style="padding:4px 2px;">
+        <div style="font-size:14px;font-weight:bold;color:#1a1a1a;margin-bottom:6px;">🏞️ ${feature.properties.name}</div>
         <div style="font-size:12px;font-weight:bold;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:4px 8px;text-align:center;">⛔ Goldwaschen verboten!</div>
       </div>`,
       { maxWidth: 260 }
@@ -177,7 +198,7 @@ const MarkerAny = Marker as any;
 const PopupAny = Popup as any;
 
 export const MapView: React.FC<MapViewProps> = ({ 
-    userLocation, locations, geoLoading, onLocationSelect, onMarkerClick, onMapInteraction, mapType, layerColors, flyToCoordinates, isFollowingUser, setIsFollowingUser, naturschutzgebieteData, showNaturschutzgebiete
+    userLocation, locations, geoLoading, onLocationSelect, onMarkerClick, onMapInteraction, mapType, layerColors, flyToCoordinates, isFollowingUser, setIsFollowingUser, naturschutzgebieteData, nationalparksData, showNaturschutzgebiete
 }) => {
   const center = userLocation || DEFAULT_COORDINATES;
   const initialZoom = userLocation ? 13 : 6;
@@ -224,6 +245,15 @@ export const MapView: React.FC<MapViewProps> = ({
           data={naturschutzgebieteData}
           style={naturschutzStyle}
           onEachFeature={onEachNaturschutzFeature}
+        />
+      )}
+
+      {showNaturschutzgebiete && nationalparksData && (
+        <GeoJSONAny
+          key="nationalparks"
+          data={nationalparksData}
+          style={nationalparkStyle}
+          onEachFeature={onEachNationalparkFeature}
         />
       )}
 
