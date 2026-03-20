@@ -16,6 +16,7 @@ import { useGeoLocation } from './hooks/useGeoLocation';
 import { LocationService } from './services/locationService';
 import { AuthService } from './services/authService';
 import { BillingService } from './services/billingService';
+import { TutorialView } from './components/Tutorial/TutorialView';
 import { GoldLocation, GeoCoordinates, Classification, PresetLayers, CustomLayer } from './types';
 import { CLASSIFICATION_COLORS, DEFAULT_COORDINATES } from './constants';
 import { User } from 'firebase/auth';
@@ -33,6 +34,22 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+
+  // --- First-launch Tutorial ---
+  const [showFirstTimeTutorial, setShowFirstTimeTutorial] = useState(false);
+
+  useEffect(() => {
+    const seen = localStorage.getItem('goldsucher_tutorial_seen');
+    if (!seen) {
+      const t = setTimeout(() => setShowFirstTimeTutorial(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const handleFirstTimeTutorialClose = () => {
+    localStorage.setItem('goldsucher_tutorial_seen', '1');
+    setShowFirstTimeTutorial(false);
+  };
 
   // --- Layer Management State ---
   const [isLayerDrawerOpen, setIsLayerDrawerOpen] = useState(false);
@@ -317,6 +334,29 @@ export default function App() {
     <div className="fixed inset-0 flex flex-col bg-brand-bg overflow-hidden">
       {showPaywall && (
         <Paywall onSubscribeSuccess={() => setShowPaywall(false)} />
+      )}
+
+      {showFirstTimeTutorial && (
+        <div className="fixed inset-0 z-[2000] flex flex-col bg-brand-bg animate-fade-in">
+          {/* Header */}
+          <div className="h-16 bg-brand-accent flex items-center justify-between px-4 shrink-0 shadow-md">
+            <div className="flex items-center gap-2 text-white font-bold text-lg">
+              <Map className="w-6 h-6 text-brand-gold" />
+              <span>Tutorial</span>
+            </div>
+            <button
+              onClick={handleFirstTimeTutorialClose}
+              className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+              aria-label="Tutorial überspringen"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          {/* Tutorial content */}
+          <div className="flex-1 overflow-hidden flex flex-col p-4">
+            <TutorialView onClose={handleFirstTimeTutorialClose} />
+          </div>
+        </div>
       )}
       
       <header className="bg-brand-accent flex items-center justify-between px-4 py-2 shadow-md z-50 shrink-0 min-h-[64px]">
