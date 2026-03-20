@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, createContext, useContext } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { LocateFixed, Locate } from 'lucide-react';
 import { GeoCoordinates, GoldLocation, Classification, PresetLayers } from '../../types';
 import { DEFAULT_COORDINATES } from '../../constants';
+
+const ProgrammaticMoveContext = createContext<React.MutableRefObject<boolean>>({ current: false } as React.MutableRefObject<boolean>);
 
 // --- Default Icon for User Location ---
 const userLocationIcon = L.divIcon({
@@ -125,12 +127,15 @@ function onEachNaturschutzFeature(feature: any, layer: any) {
 
 const RecenterMap = ({ coords, isFollowing }: { coords: GeoCoordinates, isFollowing: boolean }) => {
   const map = useMap();
+  const isProgrammaticMove = useContext(ProgrammaticMoveContext);
   useEffect(() => { 
     if (isFollowing) {
+      isProgrammaticMove.current = true;
       map.flyTo([coords.lat, coords.lng], map.getZoom() || 15, {
         animate: true,
         duration: 1
-      }); 
+      });
+      setTimeout(() => { isProgrammaticMove.current = false; }, 1200);
     }
   }, [coords, map, isFollowing]);
   return null;
@@ -138,35 +143,30 @@ const RecenterMap = ({ coords, isFollowing }: { coords: GeoCoordinates, isFollow
 
 const FlyToLocation = ({ coords }: { coords: GeoCoordinates | null }) => {
     const map = useMap();
+    const isProgrammaticMove = useContext(ProgrammaticMoveContext);
     useEffect(() => {
         if (coords) {
+            isProgrammaticMove.current = true;
             const targetZoom = 16;
             const latLng = L.latLng(coords.lat, coords.lng);
-            
-            // Project to pixel coordinates at target zoom
             const point = map.project(latLng, targetZoom);
-            
-            // Calculate offset: Shift center downwards so marker appears higher
-            // We want marker at ~25% from top of screen (to be visible above drawer)
-            // Map center is at 50%
-            // So we need to shift the center point down by 25% of screen height
             const containerHeight = map.getSize().y;
             const offset = containerHeight * 0.25;
-            
             const targetPoint = point.add([0, offset]);
             const targetLatLng = map.unproject(targetPoint, targetZoom);
-            
             map.flyTo(targetLatLng, targetZoom, { animate: true, duration: 1.0 });
+            setTimeout(() => { isProgrammaticMove.current = false; }, 1200);
         }
     }, [coords, map]);
     return null;
 };
 
 const LocationSelector = ({ onSelect, onInteraction }: { onSelect: (c: GeoCoordinates) => void, onInteraction: () => void }) => {
+    const isProgrammaticMove = useContext(ProgrammaticMoveContext);
     useMapEvents({ 
         click(e) { onSelect({ lat: e.latlng.lat, lng: e.latlng.lng }); },
-        dragstart() { onInteraction(); },
-        zoomstart() { onInteraction(); }
+        dragstart() { if (!isProgrammaticMove.current) onInteraction(); },
+        zoomstart() { if (!isProgrammaticMove.current) onInteraction(); }
     });
     return null;
 };
@@ -181,20 +181,14 @@ export const MapView: React.FC<MapViewProps> = ({
 }) => {
   const center = userLocation || DEFAULT_COORDINATES;
   const initialZoom = userLocation ? 13 : 6;
-
-  // Automatically start following if userLocation becomes available for the first time
-  useEffect(() => {
-    if (userLocation && !isFollowingUser) {
-        // We don't force it here, but we could. 
-        // Let's just let the user decide or do it once.
-    }
-  }, [userLocation]);
+  const isProgrammaticMoveRef = useRef(false);
 
   if (geoLoading && !userLocation) {
       return <div className="h-full w-full flex items-center justify-center bg-brand-bg"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-gold"></div></div>;
   }
 
   return (
+    <ProgrammaticMoveContext.Provider value={isProgrammaticMoveRef}>
     <MapContainerAny 
       center={[center.lat, center.lng]} 
       zoom={initialZoom} 
@@ -290,5 +284,6 @@ export const MapView: React.FC<MapViewProps> = ({
         </MarkerAny>
       ))}
     </MapContainerAny>
+    </ProgrammaticMoveContext.Provider>
   );
 };

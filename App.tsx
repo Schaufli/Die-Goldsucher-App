@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Map, Plus, Layers, Globe, ClipboardList, X, CheckCircle, NotebookTabs, Settings, User as UserIcon, Mountain, History, LocateFixed, Locate, Menu, TreePine } from 'lucide-react';
 import { loadNaturschutzgebiete } from './services/naturschutzgebieteService';
 import { MapView } from './components/Map/MapView';
+import { NsgProximityInfo } from './components/Map/NsgProximityInfo';
+import { computeNsgProximity, NsgProximityResult } from './utils/nsgProximity';
 import { LocationWizard } from './components/AddLocation/LocationWizard';
 import { Paywall } from './components/UI/Paywall';
 import { LocationDrawer } from './components/LocationDetail/LocationDrawer';
@@ -15,7 +17,7 @@ import { LocationService } from './services/locationService';
 import { AuthService } from './services/authService';
 import { BillingService } from './services/billingService';
 import { GoldLocation, GeoCoordinates, Classification, PresetLayers, CustomLayer } from './types';
-import { CLASSIFICATION_COLORS } from './constants';
+import { CLASSIFICATION_COLORS, DEFAULT_COORDINATES } from './constants';
 import { User } from 'firebase/auth';
 
 export default function App() {
@@ -92,6 +94,9 @@ export default function App() {
   const [naturschutzgebieteData, setNaturschutzgebieteData] = useState<any>(null);
   const [naturschutzLoading, setNaturschutzLoading] = useState(false);
 
+  const [nsgProximity, setNsgProximity] = useState<NsgProximityResult | null>(null);
+  const [nsgLoading, setNsgLoading] = useState(false);
+
   // Helper for dynamic app title
   const getAppTitle = (currentUser: User | null) => {
       if (!currentUser || !currentUser.displayName) return "Die Goldsucher App";
@@ -128,6 +133,41 @@ export default function App() {
       });
       return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!isFollowingUser) {
+      setNsgProximity(null);
+      setNsgLoading(false);
+      return;
+    }
+
+    const locationForNsg = coordinates || DEFAULT_COORDINATES;
+    let cancelled = false;
+
+    const compute = async () => {
+      let data = naturschutzgebieteData;
+      if (!data) {
+        setNsgLoading(true);
+        try {
+          data = await loadNaturschutzgebiete();
+          if (!cancelled) setNaturschutzgebieteData(data);
+        } catch (e) {
+          console.error('Failed to load NSG data for proximity check', e);
+          if (!cancelled) setNsgLoading(false);
+          return;
+        }
+      }
+      if (!cancelled) {
+        const result = computeNsgProximity(locationForNsg, data);
+        setNsgProximity(result);
+        setNsgLoading(false);
+      }
+    };
+
+    compute();
+
+    return () => { cancelled = true; };
+  }, [isFollowingUser, coordinates, naturschutzgebieteData]);
 
   const handleToggleNaturschutzgebiete = async () => {
     const newVal = !showNaturschutzgebiete;
@@ -437,6 +477,8 @@ export default function App() {
         )}
       </main>
 
+      <NsgProximityInfo result={nsgProximity} visible={isFollowingUser && !selectedLocation && !isLayerDrawerOpen && !isTodoDrawerOpen && !isLocationListOpen && !isSettingsOpen && !isAuthDrawerOpen && view === 'map'} loading={nsgLoading} />
+
       <SettingsDrawer 
           isOpen={isSettingsOpen}
           onClose={() => setIsSettingsOpen(false)}
@@ -447,10 +489,11 @@ export default function App() {
         <>
             {/* Follow User Toggle - Top Right */}
             <button
-                onClick={() => setIsFollowingUser(!isFollowingUser)}
-                className={`absolute top-20 right-4 z-40 p-3 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center border border-gray-200 ${
+                onClick={(e) => { e.stopPropagation(); setIsFollowingUser(!isFollowingUser); }}
+                className={`fixed top-20 right-4 p-3 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center border border-gray-200 ${
                     isFollowingUser ? 'bg-brand-gold text-brand-text' : 'bg-white text-brand-textSec'
                 }`}
+                style={{ zIndex: 9999 }}
                 aria-label={isFollowingUser ? "Standort folgen beenden" : "Meinem Standort folgen"}
             >
                 {isFollowingUser ? <LocateFixed size={24} /> : <Locate size={24} />}

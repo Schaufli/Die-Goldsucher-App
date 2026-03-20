@@ -32,9 +32,26 @@ export const useGeoLocation = () => {
       maximumAge: 0,
     };
 
-    const watchId = navigator.geolocation.watchPosition(handleSuccess, handleError, options);
+    const fallbackTimer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
 
-    return () => navigator.geolocation.clearWatch(watchId);
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        clearTimeout(fallbackTimer);
+        handleSuccess(position);
+      },
+      (err) => {
+        clearTimeout(fallbackTimer);
+        handleError(err);
+      },
+      options
+    );
+
+    return () => {
+      clearTimeout(fallbackTimer);
+      navigator.geolocation.clearWatch(watchId);
+    };
   }, []);
 
   return { coordinates, loading, error };
