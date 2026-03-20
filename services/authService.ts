@@ -1,5 +1,7 @@
 import { 
-    signInWithPopup, 
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     GoogleAuthProvider, 
     signOut, 
     onAuthStateChanged, 
@@ -23,16 +25,31 @@ export interface UserProfile {
 }
 
 export const AuthService = {
-    loginWithGoogle: async () => {
+    loginWithGoogle: async (displayName?: string) => {
         const provider = new GoogleAuthProvider();
+        // Store optional display name to apply after redirect returns
+        if (displayName) {
+            localStorage.setItem('goldsucher_pending_name', displayName);
+        }
+        // Use redirect flow — more reliable on mobile web apps (no popup)
+        await signInWithRedirect(auth, provider);
+        // Page navigates to Google and returns; result is handled in handleRedirectResult
+    },
+
+    handleRedirectResult: async () => {
         try {
-            const result = await signInWithPopup(auth, provider);
-            if (result.user) {
+            const result = await getRedirectResult(auth);
+            if (result?.user) {
+                const pendingName = localStorage.getItem('goldsucher_pending_name');
+                if (pendingName) {
+                    await updateProfile(result.user, { displayName: pendingName });
+                    localStorage.removeItem('goldsucher_pending_name');
+                }
                 await AuthService.syncUserToFirestore(result.user);
             }
             return result;
         } catch (error) {
-            console.error("Error logging in with Google", error);
+            console.error("Error handling Google redirect result", error);
             throw error;
         }
     },

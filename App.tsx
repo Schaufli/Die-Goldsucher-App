@@ -202,6 +202,13 @@ export default function App() {
     }
   };
 
+  // Handle Google redirect result on startup
+  useEffect(() => {
+    AuthService.handleRedirectResult().catch(err => {
+      console.error('Redirect result error:', err);
+    });
+  }, []);
+
   // Load data on startup
   useEffect(() => {
     const loadData = async () => {

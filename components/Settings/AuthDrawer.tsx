@@ -83,18 +83,15 @@ export const AuthDrawer: React.FC<AuthDrawerProps> = ({ isOpen, onClose, user })
     setLoading(true);
     setError(null);
     try {
+      // Redirects to Google — page will navigate away, no onClose needed
       await AuthService.loginWithGoogle();
-      onClose();
     } catch (err: any) {
       console.error("Google Login Error:", err);
       if (err.code === 'auth/operation-not-allowed') {
           setError("Google Login ist in Firebase nicht aktiviert. Bitte aktiviere 'Google' unter 'Authentication' -> 'Sign-in method'.");
-      } else if (err.code === 'auth/unauthorized-domain') {
-          setError("Diese Domain ist in Firebase nicht autorisiert. Bitte füge die App-URL zu den 'Authorized domains' in Firebase hinzu.");
       } else {
           setError(`Google Anmeldung fehlgeschlagen: ${err.message || "Unbekannter Fehler"}`);
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -107,19 +104,15 @@ export const AuthDrawer: React.FC<AuthDrawerProps> = ({ isOpen, onClose, user })
     setLoading(true);
     setError(null);
     try {
-      const userCred = await AuthService.loginWithGoogle();
-      await AuthService.updateUserProfile(userCred.user, firstName.trim());
-      onClose();
+      // Pass name so it's applied after the redirect returns
+      await AuthService.loginWithGoogle(firstName.trim());
     } catch (err: any) {
       console.error("Google Register Error:", err);
       if (err.code === 'auth/operation-not-allowed') {
           setError("Google Login ist in Firebase nicht aktiviert. Bitte aktiviere 'Google' unter 'Authentication' -> 'Sign-in method'.");
-      } else if (err.code === 'auth/unauthorized-domain') {
-          setError("Diese Domain ist in Firebase nicht autorisiert. Bitte füge die App-URL zu den 'Authorized domains' in Firebase hinzu.");
       } else {
           setError(`Google Registrierung fehlgeschlagen: ${err.message || "Unbekannter Fehler"}`);
       }
-    } finally {
       setLoading(false);
     }
   };
