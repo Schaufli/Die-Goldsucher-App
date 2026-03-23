@@ -254,11 +254,11 @@ export const LocationListDrawer: React.FC<LocationListDrawerProps> = ({
                       </div>
 
                       <div className="flex items-center justify-between mt-auto">
-                        <div className="flex items-center gap-1 h-5">
+                        <div className="flex items-center gap-0.5 h-7">
                           {loc.rating && (
                             <div className="flex text-brand-gold">
                               {Array.from({length: loc.rating}).map((_, i) => (
-                                <Star key={i} size={14} fill="currentColor" className="text-brand-gold" />
+                                <Star key={i} size={22} fill="currentColor" className="text-brand-gold" />
                               ))}
                             </div>
                           )}
