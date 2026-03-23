@@ -32,6 +32,7 @@ export default function App() {
 
   // --- Auth State ---
   const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
@@ -129,6 +130,7 @@ export default function App() {
   useEffect(() => {
       const unsubscribe = AuthService.subscribeToAuth(async (currentUser) => {
           setUser(currentUser);
+          setAuthLoading(false);
           if (currentUser) {
               // Check trial/subscription status
               const hasAccess = await BillingService.checkSubscriptionStatus(currentUser.uid);
@@ -352,6 +354,25 @@ export default function App() {
       setSelectedLocation(loc);
       setFlyToCoordinates({ ...loc.coordinates });
   };
+
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-brand-bg">
+        <div className="w-16 h-16 rounded-2xl bg-brand-gold flex items-center justify-center mb-4 shadow-lg">
+          <Map className="w-8 h-8 text-white" />
+        </div>
+        <div className="text-brand-textSec text-sm">Laden...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="fixed inset-0 flex flex-col bg-brand-bg overflow-hidden">
+        <AuthDrawer isOpen={true} onClose={() => {}} user={null} forceOpen={true} />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 flex flex-col bg-brand-bg overflow-hidden">
