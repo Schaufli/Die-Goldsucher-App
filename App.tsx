@@ -5,7 +5,6 @@ import { MapView } from './components/Map/MapView';
 import { NsgProximityInfo } from './components/Map/NsgProximityInfo';
 import { computeNsgProximity, NsgProximityResult } from './utils/nsgProximity';
 import { LocationWizard } from './components/AddLocation/LocationWizard';
-import { Paywall } from './components/UI/Paywall';
 import { LocationDrawer } from './components/LocationDetail/LocationDrawer';
 import { LayerDrawer } from './components/Map/LayerDrawer';
 import { TodoDrawer } from './components/Todo/TodoDrawer';
@@ -15,7 +14,6 @@ import { AuthDrawer } from './components/Settings/AuthDrawer';
 import { useGeoLocation } from './hooks/useGeoLocation';
 import { LocationService } from './services/locationService';
 import { AuthService } from './services/authService';
-import { BillingService } from './services/billingService';
 import { TutorialView } from './components/Tutorial/TutorialView';
 import { GoldLocation, GeoCoordinates, Classification, PresetLayers, CustomLayer } from './types';
 import { CLASSIFICATION_COLORS, DEFAULT_COORDINATES } from './constants';
@@ -34,7 +32,6 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
-  const [showPaywall, setShowPaywall] = useState(false);
 
   // --- First-launch Tutorial ---
   const [showFirstTimeTutorial, setShowFirstTimeTutorial] = useState(false);
@@ -132,23 +129,12 @@ export default function App() {
           setUser(currentUser);
           setAuthLoading(false);
           if (currentUser) {
-              // Check trial/subscription status
-              const hasAccess = await BillingService.checkSubscriptionStatus(currentUser.uid);
-              
-              if (!hasAccess) {
-                  setShowPaywall(true);
-              } else {
-                  setShowPaywall(false);
-                  // Trigger sync when user logs in and has access
-                  await LocationService.syncAllToFirebase(); // Push local to cloud
-                  const hasUpdates = await LocationService.syncFromFirebase(); // Pull cloud to local
-                  if (hasUpdates) {
-                      const updatedData = await LocationService.getLocations();
-                      setLocations(updatedData);
-                  }
+              await LocationService.syncAllToFirebase();
+              const hasUpdates = await LocationService.syncFromFirebase();
+              if (hasUpdates) {
+                  const updatedData = await LocationService.getLocations();
+                  setLocations(updatedData);
               }
-          } else {
-              setShowPaywall(false);
           }
       });
       return () => unsubscribe();
@@ -376,9 +362,6 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-brand-bg overflow-hidden">
-      {showPaywall && (
-        <Paywall onSubscribeSuccess={() => setShowPaywall(false)} />
-      )}
 
       {showFirstTimeTutorial && (
         <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-end">
