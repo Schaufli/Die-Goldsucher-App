@@ -14,7 +14,8 @@ export const BillingService = {
       // DUMMY LOGIC: Check if the user is older than 14 days
       // 1. Try to get from localStorage first (for offline support)
       const localKey = `trial_start_${userId}`;
-      let createdAt = localStorage.getItem(localKey) ? parseInt(localStorage.getItem(localKey)!, 10) : null;
+      localStorage.removeItem(localKey);
+      let createdAt: number | null = null;
 
       // 2. If not in localStorage, fetch from Firebase and cache it
       if (!createdAt) {
@@ -29,10 +30,9 @@ export const BillingService = {
       }
 
       const now = Date.now();
-      const trialDurationMs = 14 * 24 * 60 * 60 * 1000; // 14 days in milliseconds
+      const trialDurationMs = 365 * 24 * 60 * 60 * 1000; // 365 days — extended until real billing is integrated
       const timeElapsed = now - createdAt;
 
-      // Returns true if the user is still within the 14-day trial
       return timeElapsed <= trialDurationMs;
     } catch (error) {
       console.error("Error checking subscription status:", error);
