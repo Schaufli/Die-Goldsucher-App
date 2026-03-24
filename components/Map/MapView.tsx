@@ -15,13 +15,24 @@ const MAX_ZOOM_BY_TYPE: Record<string, number> = {
 
 function MaxZoomController({ mapType }: { mapType: string }) {
   const map = useMap();
+  const maxZoomRef = useRef(MAX_ZOOM_BY_TYPE[mapType] ?? 20);
+
   useEffect(() => {
     const maxZoom = MAX_ZOOM_BY_TYPE[mapType] ?? 20;
-    map.setMaxZoom(maxZoom);
+    maxZoomRef.current = maxZoom;
     if (map.getZoom() > maxZoom) {
       map.setZoom(maxZoom, { animate: true });
     }
   }, [map, mapType]);
+
+  useMapEvents({
+    zoomend: () => {
+      if (map.getZoom() > maxZoomRef.current) {
+        map.setZoom(maxZoomRef.current, { animate: true });
+      }
+    },
+  });
+
   return null;
 }
 
