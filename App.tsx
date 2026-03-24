@@ -551,7 +551,7 @@ export default function App() {
             </button>
         </div>
       </header>
-      <main className="flex-1 relative overflow-hidden w-full flex flex-col">
+      <main className="flex-1 relative overflow-hidden w-full min-h-0">
         <MapView 
             userLocation={coordinates} 
             locations={filteredLocations} 

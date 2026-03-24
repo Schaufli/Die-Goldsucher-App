@@ -14,6 +14,25 @@ const MAX_ZOOM_BY_TYPE: Record<string, number> = {
   hillshade: 19,
 };
 
+function MapSizeHandler() {
+  const map = useMap();
+  useEffect(() => {
+    const handleResize = () => { map.invalidateSize(); };
+    handleResize();
+    const timer = setTimeout(handleResize, 200);
+    window.addEventListener('resize', handleResize);
+    const observer = new ResizeObserver(handleResize);
+    const container = map.getContainer();
+    if (container) observer.observe(container);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+      observer.disconnect();
+    };
+  }, [map]);
+  return null;
+}
+
 function MaxZoomController({ mapType }: { mapType: string }) {
   const map = useMap();
   const maxZoomRef = useRef(MAX_ZOOM_BY_TYPE[mapType] ?? 20);
@@ -280,10 +299,11 @@ export const MapView: React.FC<MapViewProps> = ({
     <MapContainerAny 
       center={[center.lat, center.lng]} 
       zoom={initialZoom} 
-      className="h-full w-full z-0"
+      className="absolute inset-0 z-0"
       zoomControl={false}
       attributionControl={false}
     >
+      <MapSizeHandler />
       <MaxZoomController mapType={mapType} />
       <OfflineDownloader trigger={offlineDownloadTrigger} mapType={mapType} onProgress={onOfflineProgress} />
       {mapType === 'terrain' ? (
