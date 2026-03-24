@@ -7,6 +7,24 @@ import { DEFAULT_COORDINATES } from '../../constants';
 
 const ProgrammaticMoveContext = createContext<React.MutableRefObject<boolean>>({ current: false } as React.MutableRefObject<boolean>);
 
+const MAX_ZOOM_BY_TYPE: Record<string, number> = {
+  terrain: 17,
+  satellite: 20,
+  hillshade: 19,
+};
+
+function MaxZoomController({ mapType }: { mapType: string }) {
+  const map = useMap();
+  useEffect(() => {
+    const maxZoom = MAX_ZOOM_BY_TYPE[mapType] ?? 20;
+    map.setMaxZoom(maxZoom);
+    if (map.getZoom() > maxZoom) {
+      map.setZoom(maxZoom, { animate: true });
+    }
+  }, [map, mapType]);
+  return null;
+}
+
 // --- Default Icon for User Location ---
 const userLocationIcon = L.divIcon({
   className: 'user-location-marker',
@@ -217,6 +235,7 @@ export const MapView: React.FC<MapViewProps> = ({
       zoomControl={false}
       attributionControl={false}
     >
+      <MaxZoomController mapType={mapType} />
       {mapType === 'terrain' ? (
         <TileLayerAny 
             attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>' 
