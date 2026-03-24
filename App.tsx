@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Map, Plus, Layers, Globe, ClipboardList, X, CheckCircle, NotebookTabs, Settings, User as UserIcon, Mountain, History, LocateFixed, Locate, Menu, TreePine } from 'lucide-react';
+import { Map, Plus, Layers, Globe, ClipboardList, X, CheckCircle, NotebookTabs, Settings, User as UserIcon, Mountain, History, LocateFixed, Locate, Menu, TreePine, Download } from 'lucide-react';
 import { loadNaturschutzgebiete, loadNationalparks } from './services/naturschutzgebieteService';
 import { MapView } from './components/Map/MapView';
 import { NsgProximityInfo } from './components/Map/NsgProximityInfo';
@@ -104,6 +104,9 @@ export default function App() {
   const [isFollowingUser, setIsFollowingUser] = useState(false);
   const [isLeftMenuOpen, setIsLeftMenuOpen] = useState(false);
   const [isRightMenuOpen, setIsRightMenuOpen] = useState(false);
+
+  const [offlineDownloadTrigger, setOfflineDownloadTrigger] = useState(0);
+  const [offlineProgress, setOfflineProgress] = useState<{ done: number; total: number; active: boolean } | null>(null);
 
   const [showNaturschutzgebiete, setShowNaturschutzgebiete] = useState(false);
   const [naturschutzgebieteData, setNaturschutzgebieteData] = useState<any>(null);
@@ -508,6 +511,15 @@ export default function App() {
             showNaturschutzgebiete={showNaturschutzgebiete}
             naturschutzgebieteData={naturschutzgebieteData}
             nationalparksData={nationalparksData}
+            offlineDownloadTrigger={offlineDownloadTrigger}
+            onOfflineProgress={(done, total, finished) => {
+                if (finished) {
+                    setOfflineProgress({ done: total, total, active: false });
+                    setTimeout(() => setOfflineProgress(null), 3000);
+                } else {
+                    setOfflineProgress({ done, total, active: true });
+                }
+            }}
         />
         
         {/* Selection Mode Banner */}
@@ -604,6 +616,24 @@ export default function App() {
 
       <NsgProximityInfo result={nsgProximity} visible={isFollowingUser && !selectedLocation && !isLayerDrawerOpen && !isTodoDrawerOpen && !isLocationListOpen && !isSettingsOpen && !isAuthDrawerOpen && view === 'map'} loading={nsgLoading} />
 
+      {offlineProgress && view === 'map' && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-2xl shadow-xl px-5 py-3 flex flex-col items-center gap-2 min-w-[220px] border border-gray-200 animate-fade-in">
+              {offlineProgress.active ? (
+                  <>
+                      <span className="text-xs font-bold text-brand-textSec">Karte wird gespeichert...</span>
+                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-brand-gold rounded-full transition-all" style={{ width: `${Math.round((offlineProgress.done / offlineProgress.total) * 100)}%` }} />
+                      </div>
+                      <span className="text-xs text-brand-textSec">{offlineProgress.done} / {offlineProgress.total} Kacheln</span>
+                  </>
+              ) : (
+                  <span className="text-xs font-bold text-green-600 flex items-center gap-1">
+                      <CheckCircle size={14} /> Karte offline gespeichert
+                  </span>
+              )}
+          </div>
+      )}
+
       <SettingsDrawer 
           isOpen={isSettingsOpen}
           onClose={() => setIsSettingsOpen(false)}
@@ -695,6 +725,15 @@ export default function App() {
                         >
                             <TreePine className="w-6 h-6" />
                             <span className="font-bold text-sm pr-2 whitespace-nowrap">{naturschutzLoading ? 'Laden...' : 'Naturschutz'}</span>
+                        </button>
+                        <div className="w-full h-px bg-gray-300 my-1"></div>
+                        <button
+                            onClick={() => { setOfflineDownloadTrigger(Date.now()); setIsRightMenuOpen(false); }}
+                            disabled={offlineProgress?.active}
+                            className="p-3 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 hover:bg-gray-50 active:scale-95 transition-all bg-white text-brand-textSec disabled:opacity-50"
+                        >
+                            <Download className="w-6 h-6" />
+                            <span className="font-bold text-sm pr-2 whitespace-nowrap">Offline speichern</span>
                         </button>
                     </div>
                 )}

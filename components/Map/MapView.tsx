@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { LocateFixed, Locate } from 'lucide-react';
 import { GeoCoordinates, GoldLocation, Classification, PresetLayers } from '../../types';
 import { DEFAULT_COORDINATES } from '../../constants';
+import { downloadTilesForArea } from '../../utils/offlineTiles';
 
 const ProgrammaticMoveContext = createContext<React.MutableRefObject<boolean>>({ current: false } as React.MutableRefObject<boolean>);
 
@@ -129,9 +130,46 @@ interface MapViewProps {
   naturschutzgebieteData?: any;
   nationalparksData?: any;
   showNaturschutzgebiete: boolean;
+  offlineDownloadTrigger?: number;
+  onOfflineProgress?: (done: number, total: number, finished: boolean) => void;
 }
 
 const GeoJSONAny = GeoJSON as any;
+
+function OfflineDownloader({ trigger, mapType, onProgress }: {
+  trigger?: number;
+  mapType: string;
+  onProgress?: (done: number, total: number, finished: boolean) => void;
+}) {
+  const map = useMap();
+  const lastTrigger = useRef(0);
+
+  useEffect(() => {
+    if (!trigger || trigger === lastTrigger.current || !onProgress) return;
+    lastTrigger.current = trigger;
+
+    const bounds = map.getBounds();
+    const zoom = map.getZoom();
+    const area = {
+      north: bounds.getNorth(),
+      south: bounds.getSouth(),
+      east: bounds.getEast(),
+      west: bounds.getWest(),
+    };
+
+    onProgress(0, 1, false);
+
+    downloadTilesForArea(area, Math.round(zoom), mapType, (done, total) => {
+      onProgress(done, total, false);
+    }).then(() => {
+      onProgress(1, 1, true);
+    }).catch(() => {
+      onProgress(1, 1, true);
+    });
+  }, [trigger]);
+
+  return null;
+}
 
 const naturschutzStyle = {
   fillColor: '#22c55e',
@@ -227,7 +265,7 @@ const MarkerAny = Marker as any;
 const PopupAny = Popup as any;
 
 export const MapView: React.FC<MapViewProps> = ({ 
-    userLocation, locations, geoLoading, onLocationSelect, onMarkerClick, onMapInteraction, mapType, layerColors, flyToCoordinates, isFollowingUser, setIsFollowingUser, naturschutzgebieteData, nationalparksData, showNaturschutzgebiete
+    userLocation, locations, geoLoading, onLocationSelect, onMarkerClick, onMapInteraction, mapType, layerColors, flyToCoordinates, isFollowingUser, setIsFollowingUser, naturschutzgebieteData, nationalparksData, showNaturschutzgebiete, offlineDownloadTrigger, onOfflineProgress
 }) => {
   const center = userLocation || DEFAULT_COORDINATES;
   const initialZoom = userLocation ? 13 : 6;
@@ -247,6 +285,7 @@ export const MapView: React.FC<MapViewProps> = ({
       attributionControl={false}
     >
       <MaxZoomController mapType={mapType} />
+      <OfflineDownloader trigger={offlineDownloadTrigger} mapType={mapType} onProgress={onOfflineProgress} />
       {mapType === 'terrain' ? (
         <TileLayerAny 
             attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>' 
