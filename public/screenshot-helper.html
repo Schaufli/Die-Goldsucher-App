@@ -9,6 +9,7 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #1a1a1a; overflow: hidden; }
+body.export-mode { background: #f5f0e8; }
 .app-frame {
   width: 390px;
   height: 844px;
@@ -17,6 +18,11 @@ body { background: #1a1a1a; overflow: hidden; }
   overflow: hidden;
   border-radius: 0;
   background: #f5f0e8;
+}
+body.export-mode .app-frame {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
 }
 .header {
   background: #4a7c6f;
@@ -174,6 +180,7 @@ body { background: #1a1a1a; overflow: hidden; }
 <script>
 const params = new URLSearchParams(window.location.search);
 const scene = params.get('scene') || '1';
+if (params.get('export') === '1') document.body.classList.add('export-mode');
 
 function createMarkerIcon(color, type) {
   const inner = type === 'check' 
