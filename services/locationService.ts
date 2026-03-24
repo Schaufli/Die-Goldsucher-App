@@ -53,6 +53,20 @@ export const LocationService = {
     }
     return current;
   },
+
+  removeCustomLayer: (name: string): CustomLayer[] => {
+    const current = LocationService.getCustomLayers();
+    const updated = current.filter(l => l.name !== name);
+    localStorage.setItem(CUSTOM_LAYERS_KEY, JSON.stringify(updated));
+    return updated;
+  },
+
+  updateCustomLayer: (oldName: string, layer: CustomLayer): CustomLayer[] => {
+    const current = LocationService.getCustomLayers();
+    const updated = current.map(l => l.name === oldName ? layer : l);
+    localStorage.setItem(CUSTOM_LAYERS_KEY, JSON.stringify(updated));
+    return updated;
+  },
   
   // --- DB Management ---
   openDB: (): Promise<IDBDatabase> => {

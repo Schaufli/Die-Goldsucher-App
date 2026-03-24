@@ -266,8 +266,19 @@ export default function App() {
   const handleAddCustomLayer = (layer: CustomLayer) => {
       const updated = LocationService.addCustomLayer(layer);
       setCustomLayers(updated);
-      // Automatically make new layer visible
       setVisibleLayers(prev => [...prev, layer.name]);
+  };
+
+  const handleRemoveCustomLayer = (name: string) => {
+      const updated = LocationService.removeCustomLayer(name);
+      setCustomLayers(updated);
+      setVisibleLayers(prev => prev.filter(l => l !== name));
+  };
+
+  const handleUpdateCustomLayer = (oldName: string, layer: CustomLayer) => {
+      const updated = LocationService.updateCustomLayer(oldName, layer);
+      setCustomLayers(updated);
+      setVisibleLayers(prev => prev.map(l => l === oldName ? layer.name : l));
   };
 
   const handleAddLocation = async (newLocation: GoldLocation) => {
@@ -493,9 +504,12 @@ export default function App() {
             onOpen={() => setIsLayerDrawerOpen(true)}
             onClose={() => setIsLayerDrawerOpen(false)}
             availableLayers={availableLayers}
+            customLayers={customLayers}
             visibleLayers={visibleLayers}
             onToggleLayer={toggleLayer}
             onAddLayer={handleAddCustomLayer}
+            onRemoveLayer={handleRemoveCustomLayer}
+            onUpdateLayer={handleUpdateCustomLayer}
             layerColors={layerColors}
             filterLogic={filterLogic}
             onToggleFilterLogic={() => setFilterLogic(prev => prev === 'OR' ? 'AND' : 'OR')}
