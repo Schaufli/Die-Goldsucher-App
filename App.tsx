@@ -269,16 +269,44 @@ export default function App() {
       setVisibleLayers(prev => [...prev, layer.name]);
   };
 
-  const handleRemoveCustomLayer = (name: string) => {
+  const handleRemoveCustomLayer = async (name: string) => {
       const updated = LocationService.removeCustomLayer(name);
       setCustomLayers(updated);
       setVisibleLayers(prev => prev.filter(l => l !== name));
+
+      // Remove deleted layer from all locations that reference it
+      const affected = locations.filter(loc => loc.customLayers?.includes(name));
+      for (const loc of affected) {
+          const patched = { ...loc, customLayers: (loc.customLayers || []).filter(l => l !== name) };
+          await LocationService.updateLocation(patched);
+      }
+      if (affected.length > 0) {
+          setLocations(prev => prev.map(loc =>
+              affected.some(a => a.id === loc.id)
+                  ? { ...loc, customLayers: (loc.customLayers || []).filter(l => l !== name) }
+                  : loc
+          ));
+      }
   };
 
-  const handleUpdateCustomLayer = (oldName: string, layer: CustomLayer) => {
+  const handleUpdateCustomLayer = async (oldName: string, layer: CustomLayer) => {
       const updated = LocationService.updateCustomLayer(oldName, layer);
       setCustomLayers(updated);
       setVisibleLayers(prev => prev.map(l => l === oldName ? layer.name : l));
+
+      // Rename layer in all locations that reference the old name
+      const affected = locations.filter(loc => loc.customLayers?.includes(oldName));
+      for (const loc of affected) {
+          const patched = { ...loc, customLayers: (loc.customLayers || []).map(l => l === oldName ? layer.name : l) };
+          await LocationService.updateLocation(patched);
+      }
+      if (affected.length > 0) {
+          setLocations(prev => prev.map(loc =>
+              affected.some(a => a.id === loc.id)
+                  ? { ...loc, customLayers: (loc.customLayers || []).map(l => l === oldName ? layer.name : l) }
+                  : loc
+          ));
+      }
   };
 
   const handleAddLocation = async (newLocation: GoldLocation) => {
