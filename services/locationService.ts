@@ -7,6 +7,9 @@ const DB_NAME = 'goldsucher_db';
 const STORE_NAME = 'locations';
 const LEGACY_STORAGE_KEY = 'goldsucher_locations';
 const CUSTOM_LAYERS_KEY = 'goldsucher_custom_layers';
+const PENDING_SYNC_KEY = 'goldsucher_pending_sync';
+const PENDING_DELETE_KEY = 'goldsucher_pending_delete';
+const CACHED_USER_KEY = 'goldsucher_cached_user';
 
 // Fallback color generator for legacy data migration
 const stringToColor = (str: string) => {
@@ -126,13 +129,13 @@ export const LocationService = {
     });
   },
 
-  syncToFirebase: async (location: GoldLocation) => {
+  syncToFirebase: async (location: GoldLocation, throwOnError = false) => {
+      const user = auth.currentUser;
+      if (!user) {
+          LocationService.addToPendingSync(location.id);
+          return;
+      }
       try {
-          const user = auth.currentUser;
-          if (!user) return; // Only sync if logged in
-
-          // 1. Upload images to Storage if they are base64
-          // Ensure images is an array
           const images = location.images || [];
           const imageUrls = await Promise.all(images.map(async (img, index) => {
               if (img && typeof img === 'string' && img.startsWith('data:')) {
@@ -143,7 +146,6 @@ export const LocationService = {
               return img;
           }));
 
-          // 2. Prepare clean document for Firestore (no undefined values)
           const locationToSync = {
               id: location.id,
               name: location.name || 'Unbenannter Ort',
@@ -159,10 +161,8 @@ export const LocationService = {
               timestamp: location.timestamp || Date.now()
           };
 
-          // 3. Store in user-specific collection
           await setDoc(doc(db, 'users', user.uid, 'locations', location.id), locationToSync);
 
-          // 4. Update local DB with URLs to avoid re-uploading next time
           const dbLocal = await LocationService.openDB();
           const tx = dbLocal.transaction(STORE_NAME, 'readwrite');
           const store = tx.objectStore(STORE_NAME);
@@ -170,8 +170,85 @@ export const LocationService = {
           await new Promise<void>((resolve) => { tx.oncomplete = () => resolve(); });
           dbLocal.close();
       } catch (e) {
-          console.error("Firebase sync failed:", e);
+          console.error("Firebase sync failed (offline?):", e);
+          LocationService.addToPendingSync(location.id);
+          if (throwOnError) throw e;
       }
+  },
+
+  addToPendingSync: (locationId: string) => {
+      try {
+          const pending: string[] = JSON.parse(localStorage.getItem(PENDING_SYNC_KEY) || '[]');
+          if (!pending.includes(locationId)) {
+              pending.push(locationId);
+              localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(pending));
+          }
+      } catch { }
+  },
+
+  removePendingSync: (locationId: string) => {
+      try {
+          const pending: string[] = JSON.parse(localStorage.getItem(PENDING_SYNC_KEY) || '[]');
+          localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(pending.filter(id => id !== locationId)));
+      } catch { }
+  },
+
+  getPendingSync: (): string[] => {
+      try {
+          return JSON.parse(localStorage.getItem(PENDING_SYNC_KEY) || '[]');
+      } catch { return []; }
+  },
+
+  syncPendingToFirebase: async (): Promise<void> => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      let pendingDeletes: string[] = (() => { try { return JSON.parse(localStorage.getItem(PENDING_DELETE_KEY) || '[]'); } catch { return []; } })();
+      const remainingDeletes: string[] = [];
+      for (const id of pendingDeletes) {
+          try {
+              await deleteDoc(doc(db, 'users', user.uid, 'locations', id));
+          } catch {
+              remainingDeletes.push(id);
+          }
+      }
+      localStorage.setItem(PENDING_DELETE_KEY, JSON.stringify(remainingDeletes));
+
+      const pending = LocationService.getPendingSync();
+      if (pending.length === 0) return;
+      const allLocations = await LocationService.getLocations();
+      for (const id of pending) {
+          const loc = allLocations.find(l => l.id === id);
+          if (loc) {
+              try {
+                  await LocationService.syncToFirebase(loc, true);
+                  LocationService.removePendingSync(id);
+              } catch { }
+          } else {
+              LocationService.removePendingSync(id);
+          }
+      }
+  },
+
+  cacheUserInfo: (user: { uid: string; displayName: string | null; email: string | null }) => {
+      try {
+          localStorage.setItem(CACHED_USER_KEY, JSON.stringify({
+              uid: user.uid,
+              displayName: user.displayName,
+              email: user.email
+          }));
+      } catch { }
+  },
+
+  getCachedUser: (): { uid: string; displayName: string | null; email: string | null } | null => {
+      try {
+          const cached = localStorage.getItem(CACHED_USER_KEY);
+          return cached ? JSON.parse(cached) : null;
+      } catch { return null; }
+  },
+
+  clearCachedUser: () => {
+      try { localStorage.removeItem(CACHED_USER_KEY); } catch { }
   },
 
   syncFromFirebase: async (): Promise<boolean> => {
@@ -274,10 +351,19 @@ export const LocationService = {
       tx.oncomplete = () => {
           idb.close();
           resolve();
-          // Delete from Firebase
           const user = auth.currentUser;
           if (user) {
-            deleteDoc(doc(db, 'users', user.uid, 'locations', id)).catch(console.error);
+            deleteDoc(doc(db, 'users', user.uid, 'locations', id)).catch(() => {
+                try {
+                    const pending: string[] = JSON.parse(localStorage.getItem(PENDING_DELETE_KEY) || '[]');
+                    if (!pending.includes(id)) { pending.push(id); localStorage.setItem(PENDING_DELETE_KEY, JSON.stringify(pending)); }
+                } catch { }
+            });
+          } else {
+            try {
+                const pending: string[] = JSON.parse(localStorage.getItem(PENDING_DELETE_KEY) || '[]');
+                if (!pending.includes(id)) { pending.push(id); localStorage.setItem(PENDING_DELETE_KEY, JSON.stringify(pending)); }
+            } catch { }
           }
       };
       

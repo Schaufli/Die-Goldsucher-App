@@ -32,6 +32,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   // --- First-launch Tutorial ---
   const [showFirstTimeTutorial, setShowFirstTimeTutorial] = useState(false);
@@ -118,30 +119,90 @@ export default function App() {
 
   // Helper for dynamic app title
   const getAppTitle = (currentUser: User | null) => {
-      if (!currentUser || !currentUser.displayName) return "Die Goldsucher App";
-      const name = currentUser.displayName;
+      let name: string | null = null;
+      if (currentUser?.displayName) {
+          name = currentUser.displayName;
+      } else if (isOfflineMode) {
+          const cached = LocationService.getCachedUser();
+          name = cached?.displayName || null;
+      }
+      if (!name) return "Die Goldsucher App";
       // German grammar: if name ends in s, ß, x, or z, append an apostrophe, otherwise append 's
       const endsWithSibilant = /[sßxz]$/i.test(name);
       const possessive = endsWithSibilant ? `${name}'` : `${name}s`;
       return `${possessive} Goldkarte`;
   };
 
-  // Auth Listener
+  // Auth Listener with offline fallback
   useEffect(() => {
+      let authResolved = false;
+
       const unsubscribe = AuthService.subscribeToAuth(async (currentUser) => {
+          authResolved = true;
           setUser(currentUser);
           setAuthLoading(false);
+          setIsOfflineMode(false);
           if (currentUser) {
+              LocationService.cacheUserInfo({
+                  uid: currentUser.uid,
+                  displayName: currentUser.displayName,
+                  email: currentUser.email
+              });
+              try {
+                  await LocationService.syncPendingToFirebase();
+                  await LocationService.syncAllToFirebase();
+                  const hasUpdates = await LocationService.syncFromFirebase();
+                  if (hasUpdates) {
+                      const updatedData = await LocationService.getLocations();
+                      setLocations(updatedData);
+                  }
+              } catch (e) {
+                  console.warn("Online sync failed:", e);
+              }
+          } else if (navigator.onLine) {
+              LocationService.clearCachedUser();
+          } else {
+              const cachedUser = LocationService.getCachedUser();
+              if (cachedUser) {
+                  setIsOfflineMode(true);
+              }
+          }
+      });
+
+      const offlineTimeout = setTimeout(() => {
+          if (!authResolved && !navigator.onLine) {
+              const cachedUser = LocationService.getCachedUser();
+              if (cachedUser) {
+                  setIsOfflineMode(true);
+                  setAuthLoading(false);
+              }
+          }
+      }, 3000);
+
+      return () => { unsubscribe(); clearTimeout(offlineTimeout); };
+  }, []);
+
+  // Auto-sync when coming back online
+  useEffect(() => {
+      const handleOnline = async () => {
+          if (isOfflineMode && !user) {
+              return;
+          }
+          try {
+              await LocationService.syncPendingToFirebase();
               await LocationService.syncAllToFirebase();
               const hasUpdates = await LocationService.syncFromFirebase();
               if (hasUpdates) {
                   const updatedData = await LocationService.getLocations();
                   setLocations(updatedData);
               }
+          } catch (e) {
+              console.warn("Online sync failed:", e);
           }
-      });
-      return () => unsubscribe();
-  }, []);
+      };
+      window.addEventListener('online', handleOnline);
+      return () => window.removeEventListener('online', handleOnline);
+  }, [user, isOfflineMode]);
 
   useEffect(() => {
     if (!isFollowingUser) {
@@ -394,7 +455,7 @@ export default function App() {
     );
   }
 
-  if (!user) {
+  if (!user && !isOfflineMode) {
     return (
       <div className="fixed inset-0 flex flex-col bg-brand-bg overflow-hidden">
         <AuthDrawer isOpen={true} onClose={() => {}} user={null} forceOpen={true} />
@@ -443,6 +504,12 @@ export default function App() {
         </div>
       )}
       
+      {isOfflineMode && (
+          <div className="bg-amber-500 text-white text-xs font-bold text-center py-1 z-50 shrink-0">
+              Offline-Modus — Änderungen werden synchronisiert, sobald du wieder online bist
+          </div>
+      )}
+
       <header className="bg-brand-accent flex items-center justify-between px-4 py-2 shadow-md z-50 shrink-0 min-h-[64px]">
         <div className="w-10 flex items-center justify-center">
             <button 

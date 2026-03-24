@@ -35,6 +35,8 @@ The workflow is configured as "Start application" with `PORT=5000 npm run dev` o
 
 ## Key Features
 
+- Full offline support: PWA with Service Worker, offline tile caching, and pending sync queue
+- Offline auth fallback: cached user info allows app usage without internet (syncs when back online)
 - Offline-first with IndexedDB, syncs to Firebase when online/authenticated
 - Location classification: Goldhöffig, Interessant, Nicht goldhöffig + custom layers
 - Map types: Satellite, Terrain, Hillshade/Standard
