@@ -49,8 +49,6 @@ The workflow is configured as "Start application" with `PORT=5000 npm run dev` o
 
 - **Remote URL**: https://github.com/Schaufli/Die-Goldsucher-App.git (remote name: `origin`)
 - **Branch**: `main` — pushed successfully with full project history
-- To push future changes: `git push https://Schaufli:$GITHUB_TOKEN@github.com/Schaufli/Die-Goldsucher-App.git main`
-- The `GITHUB_TOKEN` secret (classic PAT with `repo` scope) is stored in Replit Secrets
 
 ## Known Limitations
 
